@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * CSS Variables for Hashtag Tech Website
+ *
+ * Design Token Architecture:
+ * 1. Define all CSS variables here (single source of truth)
+ * 2. Map CSS variables to Tailwind classes in tailwind.config.ts
+ * 3. Use Tailwind classes in components (never use hex values directly)
+ *
+ * Brand Colors:
+ * - Primary: #F26B6B (red/coral accent)
+ * - Surface colors for backgrounds and elevated elements
+ * - Semantic colors for success, warning, error states
+ */
+
+:root {
+  /* ===== Brand Colors ===== */
+  --brand-primary: #F26B6B;
+  --brand-primary-foreground: #FFFFFF;
+
+  --brand-secondary: #1E1E1E;
+  --brand-secondary-foreground: #FFFFFF;
+
+  /* ===== Surface Colors ===== */
+  --surface-default: #FFFFFF;
+  --surface-muted: #F5F5F5;
+  --surface-elevated: #FAFAFA;
+
+  /* ===== Text Colors ===== */
+  --foreground: #1A1A1A;
+  --foreground-muted: #666666;
+  --muted-foreground: #888888;
+
+  /* ===== Border & UI ===== */
+  --border: #E0E0E0;
+  --ring: #F26B6B; /* Focus ring uses brand-primary */
+
+  /* ===== Semantic Colors ===== */
+  --accent: #F26B6B;
+  --accent-foreground: #FFFFFF;
+
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+
+  --error: #EF4444;
+  --error-foreground: #FFFFFF;
+
+  /* ===== Muted Backgrounds ===== */
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+
+  /* ===== Background ===== */
+  --background: #FFFFFF;
+
+  /* ===== Animation Tokens ===== */
+  --animation-duration-hover: 150ms;
+  --animation-duration-transition: 350ms;
+  --animation-duration-scroll: 650ms;
+
+  --animation-easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ===== Border Radius ===== */
+  --radius: 0.5rem;
+
+  /* ===== Focus Ring ===== */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* ===== Section-Specific Background Colors ===== */
+/*
+ * COLOR THEME NOTE: The website uses a light theme by design.
+ * Only the Testimonials section intentionally uses a dark background.
+ * Do NOT use system-wide dark mode - sections have explicit backgrounds.
+ */
+
+/* Testimonials section - dark background (only dark section per design) */
+.section-testimonials {
+  --local-background: #1A1A1A;
+  --local-foreground: #FFFFFF;
+  background-color: var(--local-background);
+  color: var(--local-foreground);
+}
+
+/* Stats Bar - red background */
+.section-stats {
+  --local-background: #F26B6B;
+  --local-foreground: #FFFFFF;
+  background-color: var(--local-background);
+  color: var(--local-foreground);
+}
+
+/* ===== Accessibility: Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Utility Classes ===== */
+@layer utilities {
+  /* Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Focus visible styles */
+  .focus-visible-ring {
+    outline: none;
+    box-shadow: 0 0 0 var(--focus-ring-width) var(--ring);
+    box-shadow: 0 0 0 calc(var(--focus-ring-width) + var(--focus-ring-offset))
+        var(--background),
+      0 0 0 var(--focus-ring-width) var(--ring);
+  }
+
+  /* Container query support (future) */
+  @container (min-width: 640px) {
+    .container-sm {
+      /* Styles for small containers */
+    }
+  }
+}
+
+/* ===== Base Styles ===== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Heading hierarchy */
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-medium tracking-tight;
+  }
+
+  h5 {
+    @apply text-lg font-medium tracking-tight;
+  }
+
+  h6 {
+    @apply text-base font-medium tracking-tight;
+  }
+
+  /* Paragraph */
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  /* Links */
+  a {
+    @apply text-primary underline-offset-4 transition-colors;
+  }
+
+  a:hover {
+    @apply underline;
+  }
+
+  /* Focus visible for all interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply focus-visible-ring;
+  }
+}
+
+/* ===== Component Styles ===== */
+@layer components {
+  /* Button base */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-all duration-150;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground;
+  }
+
+  /* Card base */
+  .card {
+    @apply rounded-lg border bg-background text-foreground shadow-sm;
+  }
+
+  /* Input base */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm;
+    @apply placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
