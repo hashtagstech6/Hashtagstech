@@ -23,7 +23,7 @@ import MagneticButton from "@/components/ui/magnetic-button";
  */
 export default function AIServices() {
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20">
       <div className="container mx-auto px-4">
         {/* Section Header - Matching screenshot */}
         <ScrollReveal direction="up">

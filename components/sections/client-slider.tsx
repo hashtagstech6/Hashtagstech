@@ -22,35 +22,41 @@ import { cn } from "@/lib/utils";
  * ```
  */
 
-export default function Partners() {
+export default function ClientSlider() {
   const sectionRef = useRef<HTMLElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  useEffect(() => {
-    // GSAP marquee animation will be added in animation phase
-    // For now, using CSS animation as fallback
-    const animation = marqueeRef.current?.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-50%)" },
-      ],
-      {
-        duration: 30000,
-        iterations: Infinity,
-        easing: "linear",
-      }
-    );
+  const animationRef = useRef<Animation | undefined>(undefined);
 
-    if (animation && isPaused) {
-      animation.pause();
-    } else if (animation) {
-      animation.play();
+  useEffect(() => {
+    // Create animation once
+    if (marqueeRef.current) {
+      animationRef.current = marqueeRef.current.animate(
+        [
+          { transform: "translateX(0)" },
+          { transform: "translateX(-50%)" },
+        ],
+        {
+          duration: 30000,
+          iterations: Infinity,
+          easing: "linear",
+        }
+      );
     }
 
     return () => {
-      animation?.cancel();
+      animationRef.current?.cancel();
     };
+  }, []);
+
+  // Control playback based on hover state
+  useEffect(() => {
+    if (isPaused) {
+      animationRef.current?.pause();
+    } else {
+      animationRef.current?.play();
+    }
   }, [isPaused]);
 
   // Duplicate partners array for seamless infinite scroll
@@ -70,10 +76,10 @@ export default function Partners() {
             id="partners-heading"
             className="text-2xl font-semibold tracking-tight text-foreground mb-2"
           >
-            Trusted by Leading Companies
+            Our Valued Clients
           </h2>
           <p className="text-sm text-foreground-muted">
-            We've had the privilege of working with innovative businesses worldwide
+             Serving innovative businesses worldwide
           </p>
         </div>
       </div>

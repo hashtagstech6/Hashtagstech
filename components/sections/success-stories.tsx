@@ -52,7 +52,7 @@ export default function SuccessStories() {
     <section
       ref={sectionRef}
       id="success-stories"
-      className="py-16 bg-background"
+      className="py-16"
     >
       <div className="container mx-auto px-4">
         {/* Section Header */}

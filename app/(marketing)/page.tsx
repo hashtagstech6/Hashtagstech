@@ -6,7 +6,10 @@ import SuccessStories from "@/components/sections/success-stories";
 import AboutUs from "@/components/sections/about-us";
 import Testimonials from "@/components/sections/testimonials";
 import CTABanner from "@/components/sections/cta-banner";
-import Partners from "@/components/sections/partners";
+import Partners from "@/components/sections/client-slider";
+import GlobalPartners from "@/components/sections/global-partners";
+
+import BackgroundGridRain from "@/components/ui/background-grid-rain";
 
 /**
  * Homepage Component
@@ -26,6 +29,8 @@ import Partners from "@/components/sections/partners";
 export default function HomePage() {
   return (
     <>
+      <BackgroundGridRain />
+      
       {/* Hero Section */}
       <Hero />
 
@@ -37,6 +42,9 @@ export default function HomePage() {
       
       {/* About Us Section */}
       <AboutUs />
+
+      {/* Global Partners Section */}
+      <GlobalPartners />
 
       {/* AI Services Section (includes Chess CTA) */}
       <AIServices />

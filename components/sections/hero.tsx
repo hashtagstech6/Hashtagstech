@@ -34,7 +34,7 @@ export default function Hero() {
   // Typing effect for rotating words
   useEffect(() => {
     if (prefersReducedMotion) {
-      setDisplayText(rotatingWords[0]);
+      setDisplayText(rotatingWords[0] || "");
       return;
     }
 
@@ -78,7 +78,7 @@ export default function Hero() {
   }, [prefersReducedMotion]);
 
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] flex items-center bg-background pt-16 lg:pt-8">
+    <section className="relative min-h-[calc(100vh-4rem)] flex items-center pt-16 lg:pt-8">
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 lg:grid-cols-5 lg:gap-12 items-center">
           {/* Text Content - 60% */}

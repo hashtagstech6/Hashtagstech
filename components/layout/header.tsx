@@ -69,8 +69,8 @@ export default function Header() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           isScrolled
-            ? "bg-background/95 backdrop-blur-sm shadow-md"
-            : "bg-background/80 backdrop-blur-none"
+            ? "bg-white/50 backdrop-blur-md shadow-sm"
+            : "bg-white/10 backdrop-blur-sm"
         )}
       >
         <nav className="container mx-auto px-4" aria-label="Main navigation">

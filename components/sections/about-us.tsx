@@ -47,7 +47,7 @@ export default function AboutUs() {
     <section
       ref={sectionRef}
       id="about-us"
-      className="py-20 bg-surface-elevated"
+      className="py-20"
       aria-labelledby="about-heading"
     >
       <div className="container mx-auto px-4">

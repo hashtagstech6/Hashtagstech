@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import { testimonials } from "@/data/testimonials";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Testimonials Section Component
@@ -35,7 +36,7 @@ function StarRating({ rating }: { rating: number }) {
           key={i}
           className={cn(
             "w-5 h-5",
-            i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
+            i < rating ? "text-red-600 fill-red-600" : "text-gray-800"
           )}
           aria-hidden="true"
         />
@@ -47,53 +48,65 @@ function StarRating({ rating }: { rating: number }) {
 export default function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
 
   // Get current testimonial
   const currentTestimonial = testimonials[currentIndex] ?? testimonials[0]!;
 
+  // Variants for sliding animation
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 100 : -100,
+      opacity: 0,
+    }),
+  };
+
   // Carousel navigation
   const nextTestimonial = () => {
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevTestimonial = () => {
+    setDirection(-1);
     setCurrentIndex(
       (prev) => (prev - 1 + testimonials.length) % testimonials.length
     );
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
   };
 
   return (
     <section
       ref={sectionRef}
       id="testimonials"
-      className="section-testimonials py-20"
+      className="section-testimonials py-20 overflow-hidden" // Added overflow-hidden
       aria-labelledby="testimonials-heading"
     >
       <div className="container mx-auto px-4">
-        {/* Section Header - Matching screenshot */}
-        <ScrollReveal>
-          <div className="text-center mb-16">
-            <p className="text-sm text-white/60 tracking-wide uppercase mb-4">
-              Success Stories
-            </p>
-            <h2
-              id="testimonials-heading"
-              className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4"
-            >
-              Hear from{" "}
-              <span className="text-primary">Our Clients</span>
-            </h2>
-          </div>
-        </ScrollReveal>
+        {/* ... Header ... */}
 
         {/* Single Testimonial Display - Centered */}
         <ScrollReveal>
-          <div className="max-w-4xl mx-auto relative">
+          <div className="max-w-4xl mx-auto relative min-h-[400px]"> {/* Min-height for stability */}
             {/* Navigation Arrows */}
             <button
               type="button"
               onClick={prevTestimonial}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-16 p-3 rounded-full border border-white/20 bg-transparent hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-16 z-20 p-3 rounded-full border border-white/20 bg-transparent hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
@@ -102,54 +115,92 @@ export default function Testimonials() {
             <button
               type="button"
               onClick={nextTestimonial}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-16 p-3 rounded-full border border-white/20 bg-transparent hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-16 z-20 p-3 rounded-full border border-white/20 bg-transparent hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-6 h-6 text-white" />
             </button>
 
-            {/* Testimonial Content - No card border, clean layout */}
-            <div className="text-center px-8 md:px-16">
-              {/* Star Rating - Centered */}
-              <div className="flex justify-center mb-6">
-                <StarRating rating={currentTestimonial.rating} />
-              </div>
+            {/* Testimonial Content - Animated */}
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={1}
+                onDragEnd={(_, { offset, velocity }) => {
+                  const swipe = swipePower(offset.x, velocity.x);
 
-              {/* Quote - Clean text without card */}
-              <blockquote className="text-lg md:text-xl text-white/90 leading-relaxed mb-8">
-                "{currentTestimonial.quote}"
-              </blockquote>
-
-              {/* Client Info - Avatar with name and title */}
-              <div className="flex items-center justify-center gap-4">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20">
-                  <Image
-                    src={currentTestimonial.image}
-                    alt={currentTestimonial.clientName}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                  />
+                  if (swipe < -swipeConfidenceThreshold) {
+                    nextTestimonial();
+                  } else if (swipe > swipeConfidenceThreshold) {
+                    prevTestimonial();
+                  }
+                }}
+                className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 md:px-20 cursor-grab active:cursor-grabbing"
+              >
+                {/* Image - Left Side */}
+                <div className="flex-shrink-0 select-none">
+                  <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
+                    <Image
+                      src={currentTestimonial.image}
+                      alt={currentTestimonial.clientName}
+                      fill
+                      className="object-cover"
+                      draggable={false}
+                    />
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-base font-semibold text-white">
-                    {currentTestimonial.clientName}
-                  </p>
-                  <p className="text-sm text-white/60">
-                    {currentTestimonial.clientTitle},{" "}
-                    {currentTestimonial.clientCompany}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            {/* Dots Indicator */}
-            <div className="flex justify-center space-x-2 mt-10">
+                {/* Content - Right Side */}
+                <div className="flex-1 text-center md:text-left select-none">
+                  {/* Star Rating */}
+                  <div className="flex justify-center md:justify-start mb-6">
+                    <StarRating rating={currentTestimonial.rating} />
+                  </div>
+
+                  {/* Quote */}
+                  <blockquote className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed mb-8">
+                    "{currentTestimonial.quote}"
+                  </blockquote>
+
+                  {/* Client Info */}
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">
+                      {currentTestimonial.clientName}
+                    </h3>
+                    <p className="text-sm text-white/60 font-medium">
+                      {currentTestimonial.clientTitle}
+                      {currentTestimonial.clientCompany && (
+                        <span className="opacity-70">
+                          , {currentTestimonial.clientCompany}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            
+            {/* Dots Indicator - pushed down to not overlap absolute content */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
               {testimonials.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setCurrentIndex(idx)}
+                  onClick={() => {
+                    setDirection(idx > currentIndex ? 1 : -1);
+                    setCurrentIndex(idx);
+                  }}
                   className={cn(
                     "w-2 h-2 rounded-full transition-colors",
                     idx === currentIndex
