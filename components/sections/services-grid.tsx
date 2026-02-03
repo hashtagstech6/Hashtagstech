@@ -32,7 +32,7 @@ export default function ServicesGrid() {
               Our Popular Services
             </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              Development & <span className="text-primary">Marketing</span>
+              Development & <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep">Marketing</span>
             </h2>
           </div>
         </ScrollReveal>
@@ -59,7 +59,7 @@ function ServiceColumn({ service, index }: { service: (typeof services)[0]; inde
   const isPrimary = index === 1;
 
   return (
-    <div className="space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">
       {/* Title */}
       <h3 className="text-xl font-bold text-foreground">
         {service.title}

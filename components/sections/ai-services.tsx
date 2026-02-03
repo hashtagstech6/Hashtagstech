@@ -32,7 +32,7 @@ export default function AIServices() {
               Your Partner In AI Transformation
             </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              10x Your Business with <span className="text-primary">AI!</span>
+              10x Your Business with <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep">AI!</span>
             </h2>
           </div>
         </ScrollReveal>
@@ -47,16 +47,16 @@ export default function AIServices() {
         {/* Chess CTA Section - Integrated for consistent spacing */}
         <div className="mt-8">
           <ScrollReveal>
-            <div className="bg-white rounded-lg border border-border/30 shadow-sm p-6 md:p-8">
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="bg-white rounded-lg border border-border/30 shadow-sm p-4 md:p-2">
+              <div className="flex flex-col md:flex-row items-center md:px-2  gap-6 md:gap-10">
                 {/* Left - Chess Knight Image */}
                 <div className="flex-shrink-0">
-                  <div className="w-20 h-20 md:w-24 md:h-24 relative">
+                  <div className="w-60 h-60 md:w-24 md:h-24 relative">
                     <Image
                       src="/placeholder.svg"
                       alt="Chess Knight"
                       fill
-                      className="object-contain"
+                      className="object-cover md:object-contain"
                     />
                   </div>
                 </div>
@@ -66,13 +66,13 @@ export default function AIServices() {
                   <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
                     Do You Want Us To Checkmate Your Software Challenges?
                   </h3>
-                  <p className="text-base md:text-lg text-primary font-medium">
+                  <p className="text-base md:text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep font-medium">
                     Get Call from FREYA our AI Assistant Now Within 60 Seconds!!
                   </p>
                 </div>
 
                 {/* Right - CTA Button */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 md:p-8">
                   <MagneticButton href="/contact" variant="primary" className="px-8">
                     GET CALL NOW
                     <ArrowRight className="w-4 h-4" />
@@ -100,14 +100,14 @@ function AIServiceColumn({
 }) {
   return (
     <ScrollReveal direction="up" delay={index * 0.1}>
-      <div className="h-full flex flex-col space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="h-full flex flex-col space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">
         {/* Title with Badge */}
         <div className="flex items-center gap-3">
           <h3 className="text-xl font-bold text-foreground">
             {service.title}
           </h3>
           {/* Numbered Badge */}
-          <span className="inline-flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground text-sm font-bold rounded">
+          <span className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-primary to-primary-deep text-primary-foreground text-sm font-bold rounded">
             {service.number}
           </span>
         </div>

@@ -58,7 +58,7 @@ const MagneticButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonP
       // White: For use on colored backgrounds
       white: cn(
         "bg-white text-primary",
-        "hover:text-primary"
+        "hover:text-white"
       ),
       // White Outline: Transparent with white border
       "white-outline": cn(

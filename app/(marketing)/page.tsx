@@ -8,6 +8,7 @@ import Testimonials from "@/components/sections/testimonials";
 import CTABanner from "@/components/sections/cta-banner";
 import Partners from "@/components/sections/client-slider";
 import GlobalPartners from "@/components/sections/global-partners";
+import CeoMessage from "@/components/sections/ceo-message";
 
 import BackgroundGridRain from "@/components/ui/background-grid-rain";
 
@@ -58,6 +59,9 @@ export default function HomePage() {
       {/* Services Grid Section */}
       <ServicesGrid />
 
+      {/* CEO Message Section */}
+      <CeoMessage />
+      
       {/* CTA Banner Section (Phase 4) */}
       <CTABanner />
     </>

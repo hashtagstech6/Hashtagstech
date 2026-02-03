@@ -72,13 +72,15 @@ export default function StatsBar() {
   return (
     <section 
       ref={sectionRef} 
-      className="bg-primary py-4 text-primary-foreground"
+      className="bg-primary-deep py-4 text-primary-foreground"
       aria-label="Company statistics"
     >
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 lg:gap-16">
+      <div className="mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full max-w-6xl mx-auto">
           {stats.map((stat) => (
-            <StatItem key={stat.id} stat={stat} />
+            <div key={stat.id} className="flex justify-center">
+              <StatItem stat={stat} />
+            </div>
           ))}
         </div>
       </div>
@@ -94,6 +96,7 @@ function StatItem({ stat }: { stat: Stat }) {
   const { value, ref } = useCounterAnimation({
     endValue: stat.value,
     duration: 2,
+    scrollTrigger: true, // Enable GSAP ScrollTrigger for scroll-based animation
   });
 
   return (

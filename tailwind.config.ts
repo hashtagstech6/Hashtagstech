@@ -14,6 +14,7 @@ const config: Config = {
         foreground: "var(--foreground)",
         primary: {
           DEFAULT: "var(--brand-primary)",
+          deep: "var(--brand-primary-deep)",
           foreground: "var(--brand-primary-foreground)",
         },
         secondary: {

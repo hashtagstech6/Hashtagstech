@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReducedMotion } from "./use-reduced-motion";
+
+// Register ScrollTrigger plugin (client-side only)
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 /**
  * Props for useCounterAnimation hook
@@ -18,6 +24,8 @@ interface UseCounterAnimationProps {
   decimals?: number;
   /** Whether to start animation automatically (default: true) */
   autoStart?: boolean;
+  /** Enable ScrollTrigger for scroll-based animation (default: false) */
+  scrollTrigger?: boolean;
 }
 
 /**
@@ -48,12 +56,14 @@ export function useCounterAnimation({
   duration = 2,
   decimals = 0,
   autoStart = true,
+  scrollTrigger = false,
 }: UseCounterAnimationProps) {
   const [currentValue, setCurrentValue] = useState(startValue);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const animationRef = useRef<gsap.core.Tween | null>(null);
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
 
   // Format number with specified decimal places
   const formatValue = (value: number): string => {
@@ -72,7 +82,16 @@ export function useCounterAnimation({
     // Create a proxy object for GSAP to animate
     const proxy = { value: startValue };
 
-    animationRef.current = gsap.to(proxy, {
+    // Clean up existing animation and ScrollTrigger
+    if (animationRef.current) {
+      animationRef.current.kill();
+    }
+    if (scrollTriggerRef.current) {
+      scrollTriggerRef.current.kill();
+    }
+
+    // Create GSAP tween configuration
+    const tweenConfig: gsap.TweenVars = {
       value: endValue,
       duration,
       ease: "power2.out",
@@ -82,7 +101,25 @@ export function useCounterAnimation({
       onComplete: () => {
         setHasAnimated(true);
       },
-    });
+    };
+
+    // Add ScrollTrigger if enabled
+    if (scrollTrigger && ref.current) {
+      // Find parent section element for scroll trigger
+      const sectionElement = ref.current.closest<HTMLElement>("section");
+
+      scrollTriggerRef.current = ScrollTrigger.create({
+        trigger: sectionElement || ref.current,
+        start: "top 80%", // Start animation when top of element is at 80% of viewport
+        onEnter: () => {
+          animationRef.current = gsap.to(proxy, tweenConfig);
+        },
+        once: true, // Only animate once
+      });
+    } else {
+      // Start immediately without ScrollTrigger
+      animationRef.current = gsap.to(proxy, tweenConfig);
+    }
   };
 
   // Auto-start animation when ref is attached
@@ -92,9 +129,12 @@ export function useCounterAnimation({
     }
 
     return () => {
-      // Clean up animation on unmount
+      // Clean up animation and ScrollTrigger on unmount
       if (animationRef.current) {
         animationRef.current.kill();
+      }
+      if (scrollTriggerRef.current) {
+        scrollTriggerRef.current.kill();
       }
     };
   }, [autoStart, endValue]);

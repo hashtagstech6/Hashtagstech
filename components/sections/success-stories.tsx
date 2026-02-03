@@ -101,11 +101,11 @@ export default function SuccessStories() {
                   )}
                   style={{ top: "50%", transform: hoveredClient === client.id ? "translateY(-50%)" : "translateY(-50%) translateX(16px)" }}
                 >
-                  <div className="aspect-video rounded-lg overflow-hidden bg-muted shadow-xl border border-border/20">
+                  <div className="aspect-video rounded overflow-hidden bg-muted shadow-xl border border-border/20">
                     <img
                       src="/placeholder.svg"
                       alt={`${client.name} project`}
-                      className="w-full h-full object-contain p-3"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 </div>

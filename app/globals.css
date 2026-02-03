@@ -18,7 +18,8 @@
 
 :root {
   /* ===== Brand Colors ===== */
-  --brand-primary: #F26B6B;
+  --brand-primary: #FF4F5A;
+  --brand-primary-deep: #BE3B43;
   --brand-primary-foreground: #FFFFFF;
 
   --brand-secondary: #1E1E1E;
@@ -36,10 +37,10 @@
 
   /* ===== Border & UI ===== */
   --border: #E0E0E0;
-  --ring: #F26B6B; /* Focus ring uses brand-primary */
+  --ring: var(--brand-primary); /* Focus ring uses brand-primary */
 
   /* ===== Semantic Colors ===== */
-  --accent: #F26B6B;
+  --accent: var(--brand-primary);
   --accent-foreground: #FFFFFF;
 
   --success: #10B981;

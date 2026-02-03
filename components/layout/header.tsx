@@ -81,7 +81,7 @@ export default function Header() {
               className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
             >
               <img
-                src="/logo-horizontal.jpeg"
+                src="/logo-horizontal.webp"
                 alt="Hashtag Tech Logo"
                 width={150}
                 height={40}

@@ -28,7 +28,7 @@ export default function CTABanner() {
   return (
     <section
       ref={sectionRef}
-      className="py-16 bg-primary"
+      className="py-16 bg-gradient-to-b from-primary to-primary-deep"
       aria-labelledby="cta-banner-heading"
     >
       <div className="container mx-auto px-4">

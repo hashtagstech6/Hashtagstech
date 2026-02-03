@@ -101,7 +101,7 @@ export default function Testimonials() {
 
         {/* Single Testimonial Display - Centered */}
         <ScrollReveal>
-          <div className="max-w-4xl mx-auto relative min-h-[400px]"> {/* Min-height for stability */}
+          <div className="max-w-4xl mx-auto relative min-h-[420px]"> {/* Min-height for stability */}
             {/* Navigation Arrows */}
             <button
               type="button"
@@ -192,7 +192,7 @@ export default function Testimonials() {
             </AnimatePresence>
             
             {/* Dots Indicator - pushed down to not overlap absolute content */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+            <div className="absolute -bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
               {testimonials.map((_, idx) => (
                 <button
                   key={idx}

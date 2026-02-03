@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowRight, Zap, MessageSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
+import TiltCard from "@/components/ui/tilt-card";
 
 /**
  * About Us Section Component
@@ -55,13 +56,31 @@ export default function AboutUs() {
           
           {/* Left Column - Visual */}
           <ScrollReveal>
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted/30">
-              <Image
-                src="/placeholder.svg"
-                alt="About Hashtag Tech"
-                fill
-                className="object-contain p-8"
-              />
+             {/* Added aspect-square wrapper to constrain height if needed, 
+                 but TiltCard usually takes full h/w. 
+                 AboutUs image block has 'relative aspect-square' 
+                 so we wrap THAT or put TiltCard inside it. 
+                 The existing div is "relative aspect-square rounded-2xl ...". 
+                 Best to put TiltCard OUTSIDE or INSIDE? 
+                 TiltCard returns a motion.div w-full h-full. 
+                 So we should replace the wrapping div with:
+                 <div className="aspect-square ..."> <TiltCard> <div...image...> </TiltCard> 
+                 OR wrap the whole thing. 
+                 
+                 Let's put TiltCard INSIDE the aspect-ratio container to maintain layout, 
+                 and move the 'rounded-2xl overflow-hidden' to the INNER div. 
+             */}
+            <div className="relative aspect-square">
+              <TiltCard>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden bg-muted/30">
+                  <Image
+                    src="/placeholder.svg"
+                    alt="About Hashtag Tech"
+                    fill
+                    className="object-contain md:p-8"
+                  />
+                </div>
+              </TiltCard>
             </div>
           </ScrollReveal>
 
@@ -69,7 +88,7 @@ export default function AboutUs() {
           <ScrollReveal delay={0.2}>
             <div className="flex flex-col justify-center h-full">
               {/* Badge */}
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 w-fit">
+              <div className="inline-flex items-center py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 w-fit">
                 About Us
               </div>
 

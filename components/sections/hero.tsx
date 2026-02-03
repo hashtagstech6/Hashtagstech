@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, MapPin } from "lucide-react";
 import MagneticButton from "@/components/ui/magnetic-button";
+import TiltCard from "@/components/ui/tilt-card";
 import gsap from "gsap";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
@@ -11,8 +12,8 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
  * Hero Section Component
  *
  * Two-column layout:
- * - Left side (60%): Location badge, headline with rotating word, CTA button
- * - Right side (40%): Illustration placeholder
+ * - Left side (50%): Location badge, headline with rotating word, CTA button
+ * - Right side (50%): Illustration placeholder
  *
  * Features:
  * - Rotating typing effect on the red accent word
@@ -25,7 +26,6 @@ const rotatingWords = ["Application", "Development", "Marketing", "Solutions", "
 
 export default function Hero() {
   const illustrationRef = useRef<HTMLDivElement>(null);
-  const typingRef = useRef<HTMLSpanElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -80,9 +80,9 @@ export default function Hero() {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center pt-16 lg:pt-8">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-8 lg:grid-cols-5 lg:gap-12 items-center">
-          {/* Text Content - 60% */}
-          <div className="lg:col-span-3 space-y-6">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-4 items-center">
+          {/* Text Content - 50% */}
+          <div className="space-y-2">
             {/* Location Badge */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Registered & Operating in</span>
@@ -92,16 +92,15 @@ export default function Hero() {
 
             {/* Main Headline */}
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold leading-snug sm:text-5xl lg:text-6xl pb-2">
+              <h1 className="text-4xl font-bold leading-snug sm:text-5xl lg:text-6xl pb-1">
                 {/* On mobile: single line, on desktop: can wrap */}
                 <span className="text-foreground whitespace-nowrap sm:whitespace-normal">AI Powered Agency</span>
                 <br />
                 <span 
-                  ref={typingRef}
-                  className="text-primary inline-block min-w-[200px]"
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep inline-block min-w-[200px] pb-1 leading-normal"
                 >
                   {displayText}
-                  <span className="animate-pulse">|</span>
+                  <span className="text-primary animate-pulse">|</span>
                 </span>
               </h1>
             </div>
@@ -120,21 +119,25 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Illustration - 40% */}
+          {/* Illustration - 50% */}
           <div
             ref={illustrationRef}
-            className="lg:col-span-2 relative"
+            className="relative flex justify-center lg:justify-end"
             style={{ opacity: prefersReducedMotion ? 1 : 0 }}
           >
-            <div className="relative aspect-square">
-              <Image
-                src="/placeholder.svg"
-                alt="Hashtag Tech team illustration"
-                fill
-                className="object-contain"
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                priority
-              />
+            <div className="relative aspect-square w-full max-w-[600px]">
+              <TiltCard>
+                <div className="relative w-full h-full">
+                  <Image
+                    src="/placeholder.svg"
+                    alt="Hashtag Tech team illustration"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                  />
+                </div>
+              </TiltCard>
             </div>
           </div>
         </div>

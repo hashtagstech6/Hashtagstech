@@ -126,7 +126,7 @@ Tasks are organized by user story to enable independent implementation and testi
 
 ### Animation Tasks
 
-- [ ] T047 [US2] Implement GSAP ScrollTrigger for stats counter animation (0 to target value when scrolled into view)
+- [X] T047 [US2] Implement GSAP ScrollTrigger for stats counter animation (0 to target value when scrolled into view)
 - [X] T048 [US2] Implement client name marquee auto-scroll using CSS/GSAP continuous animation
 - [X] T049 [US2] Implement testimonial carousel with left/right arrow navigation using Motion.dev AnimatePresence (alternatively: dot indicators or swipe gestures)
 
