@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import MobileNav from "./mobile-nav";
 import MagneticButton from "@/components/ui/magnetic-button";
@@ -27,6 +29,7 @@ import MagneticButton from "@/components/ui/magnetic-button";
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   // Detect scroll position for shadow effect
   useEffect(() => {
@@ -58,27 +61,35 @@ export default function Header() {
 
   const navigation = [
     { name: "HOME", href: "/" },
-    { name: "SERVICES", href: "/#services" },
-    { name: "TEAM", href: "/#team" },
+    { name: "SERVICES", href: "/services" },
+    { name: "TEAM", href: "/team" },
     { name: "CAREER", href: "/career" },
+    { name: "BLOG", href: "/blog" },
   ];
 
   return (
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "fixed top-0 left-0 right-0 z-[999] transition-all duration-300",
           isScrolled
-            ? "bg-white/50 backdrop-blur-md shadow-sm"
-            : "bg-white/10 backdrop-blur-sm"
+            ? "bg-white shadow-sm"
+            : pathname === "/"
+            ? "bg-white/10 backdrop-blur-sm"
+            : "bg-white"
         )}
       >
         <nav className="container mx-auto px-4" aria-label="Main navigation">
-          <div className="flex h-16 items-center justify-between">
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex h-16 items-center justify-between"
+          >
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+              className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md filter-none drop-shadow-none"
             >
               <img
                 src="/logo-horizontal.webp"
@@ -91,18 +102,32 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-8">
-              {navigation.map((item) => (
-                <Link
+              {navigation.map((item, index) => (
+                <motion.div
                   key={item.name}
-                  href={item.href}
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md px-2 py-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.1, duration: 0.4 }}
                 >
-                  {item.name}
-                </Link>
+                  <Link
+                    href={item.href}
+                    className="text-sm font-medium text-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md px-2 py-1 relative group no-underline hover:no-underline"
+                    style={{ textShadow: "none" }}
+                  >
+                    {item.name}
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                  </Link>
+                </motion.div>
               ))}
-              <MagneticButton href="/contact" variant="primary">
-                BOOK MEETING
-              </MagneticButton>
+              <motion.div
+                 initial={{ opacity: 0, scale: 0.9 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 transition={{ delay: 0.5, duration: 0.3 }}
+              >
+                  <MagneticButton href="/contact" variant="primary" className="px-5 py-3 text-xs rounded-lg" style={{ textShadow: "none" }}>
+                    BOOK MEETING
+                  </MagneticButton>
+              </motion.div>
             </div>
 
             {/* Mobile menu button */}
@@ -129,7 +154,7 @@ export default function Header() {
                 />
               </svg>
             </button>
-          </div>
+          </motion.div>
         </nav>
       </header>
 

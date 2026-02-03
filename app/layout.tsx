@@ -1,8 +1,19 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import dynamic from "next/dynamic";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import "./globals.css";
+
+// Dynamically import Chat Widget for code splitting (FR-056)
+// T099 [P] Load chat widget using `next/dynamic` for code splitting
+const ChatWidget = dynamic(
+  () => import("@/components/widgets/chat-widget").then((mod) => mod.ChatWidget),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -69,6 +80,10 @@ export default function RootLayout({
 
         {/* Footer */}
         <Footer />
+
+        {/* Chat Widget (site-wide) */}
+        {/* T100 Add Chat Widget to `app/layout.tsx` for site-wide availability */}
+        <ChatWidget />
       </body>
     </html>
   );

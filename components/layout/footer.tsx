@@ -74,60 +74,80 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border bg-surface-muted">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-8 md:grid-cols-3">
-          {/* Get In Touch Column */}
-          <div>
-            <h3 className="mb-4 text-lg font-semibold text-foreground">
-              Get In Touch
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">Email Us</p>
-                <ul className="mt-2 space-y-1">
-                  {contactInfo.emails.map((email) => (
-                    <li key={email.label}>
-                      <a
-                        href={`mailto:${email.email}`}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        {email.label}: {email.email}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Our Offices</p>
-                <ul className="mt-2 space-y-1">
-                  {contactInfo.offices.map((office) => (
-                    <li
-                      key={office.city}
-                      className="text-sm text-muted-foreground"
-                    >
-                      {office.city}, {office.country}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                24/7 Support Available
-              </p>
+    <footer className="border-t border-white/10 bg-black text-white relative overflow-hidden">
+      {/* Background Pattern - Large Text Trace */}
+      <div className="absolute -top-[10%] -right-[5%] text-[15rem] font-black text-white/[0.02] pointer-events-none select-none leading-none z-0">
+        HASHTAG
+      </div>
+
+      <div className="container mx-auto px-4 pt-16 pb-8 relative z-10">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+          
+          {/* Column 1: Brand & About */}
+          <div className="space-y-6">
+            <Link href="/" className="block">
+               <img
+                src="/logo-horizontal.webp"
+                alt="Hashtag Tech"
+                className="h-8 w-auto opacity-90"
+              />
+            </Link>
+            <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+              We build world-class web and mobile applications powered by cutting-edge AI technology. Partner with us to transform your digital presence.
+            </p>
+            {/* Social Links Moved Here */}
+            <div className="flex space-x-4 pt-2">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-primary hover:bg-white/5 transition-all duration-300 rounded-full p-2 border border-white/10 hover:border-primary/50"
+                  aria-label={`Follow us on ${social.name}`}
+                >
+                  {social.icon}
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links Column */}
+          {/* Column 2: Services */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold text-foreground">
-              Quick Links
+            <h3 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
+              Services
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
+              {[
+                { name: "Web Development", href: "/services/web-development" },
+                { name: "App Development", href: "/services/app-development" },
+                { name: "AI Integration", href: "/services/ai-solutions" },
+                { name: "Digital Marketing", href: "/services/digital-marketing" },
+                { name: "UI/UX Design", href: "/services/design" },
+              ].map((service) => (
+                <li key={service.name}>
+                  <Link
+                    href={service.href}
+                    className="text-sm text-white/60 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-200"
+                  >
+                    {service.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Company (Quick Links) */}
+          <div>
+            <h3 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
+              Company
+            </h3>
+            <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-white/60 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-200"
                   >
                     {link.name}
                   </Link>
@@ -136,33 +156,54 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social Links Column */}
+          {/* Column 4: Contact */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold text-foreground">
-              Follow Us
+            <h3 className="mb-6 text-sm font-bold uppercase tracking-wider text-white">
+              Contact
             </h3>
-            <div className="flex space-x-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md p-1"
-                  aria-label={`Follow us on ${social.name}`}
-                >
-                  {social.icon}
-                </a>
-              ))}
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Email</p>
+                <div className="space-y-2">
+                  {contactInfo.emails.slice(0, 2).map((email) => (
+                    <a
+                      key={email.label}
+                      href={`mailto:${email.email}`}
+                      className="block text-sm text-white/80 hover:text-primary transition-colors"
+                    >
+                      {email.email}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+               <div className="space-y-3">
+                <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Offices</p>
+                <ul className="space-y-2">
+                  {contactInfo.offices.slice(0, 2).map((office) => (
+                    <li
+                      key={office.city}
+                      className="text-sm text-white/60"
+                    >
+                      {office.city}, {office.country}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
+
         </div>
 
         {/* Copyright Bar */}
-        <div className="mt-8 border-t border-border pt-8 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-16 border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-white/40">
             &copy; {currentYear} Hashtag Tech. All rights reserved.
           </p>
+          <div className="flex gap-6 text-xs text-white/40">
+             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </div>
     </footer>

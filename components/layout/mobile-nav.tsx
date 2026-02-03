@@ -159,7 +159,7 @@ export default function MobileNav({
               {/* Header */}
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <img
-                  src="/logo-horizontal.jpeg"
+                  src="/logo-horizontal.webp"
                   alt="Hashtag Tech Logo"
                   width={150}
                   height={40}

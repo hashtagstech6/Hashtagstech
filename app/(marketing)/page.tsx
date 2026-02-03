@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Hero from "@/components/sections/hero";
 import StatsBar from "@/components/sections/stats-bar";
 import ServicesGrid from "@/components/sections/services-grid";
@@ -9,8 +10,62 @@ import CTABanner from "@/components/sections/cta-banner";
 import Partners from "@/components/sections/client-slider";
 import GlobalPartners from "@/components/sections/global-partners";
 import CeoMessage from "@/components/sections/ceo-message";
+import LatestInsights from "@/components/sections/latest-insights";
 
 import BackgroundGridRain from "@/components/ui/background-grid-rain";
+
+/**
+ * Homepage Metadata
+ * T112 Add homepage metadata (title, description, Open Graph tags) to `app/(marketing)/page.tsx` for SC-015
+ */
+export const metadata: Metadata = {
+  title: "Hashtag Tech | AI-Powered Software Development Agency",
+  description:
+    "Building world-class web and mobile applications with cutting-edge AI technology. Expert web development, app development, and digital marketing services since 2019.",
+  keywords: [
+    "web development",
+    "app development",
+    "AI solutions",
+    "software development agency",
+    "Hashtag Tech",
+    "mobile apps",
+    "digital marketing",
+    "AI agents",
+  ],
+  authors: [{ name: "Hashtag Tech" }],
+  openGraph: {
+    title: "Hashtag Tech | AI-Powered Software Development Agency",
+    description:
+      "Building world-class web and mobile applications with cutting-edge AI technology. Expert web development, app development, and digital marketing services since 2019.",
+    type: "website",
+    url: "https://hashtagstech.com",
+    siteName: "Hashtag Tech",
+    images: [
+      {
+        url: "/logo-horizontal.webp",
+        width: 1200,
+        height: 630,
+        alt: "Hashtag Tech Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hashtag Tech | AI-Powered Software Development Agency",
+    description:
+      "Building world-class web and mobile applications with cutting-edge AI technology.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+/**
+ * Revalidation time for ISR (3600 seconds = 1 hour)
+ * T103 Implement ISR with 3600-second revalidation on homepage
+ */
+export const revalidate = 3600;
 
 /**
  * Homepage Component
@@ -61,6 +116,9 @@ export default function HomePage() {
 
       {/* CEO Message Section */}
       <CeoMessage />
+      
+      {/* Latest Blog Insights */}
+      <LatestInsights />
       
       {/* CTA Banner Section (Phase 4) */}
       <CTABanner />

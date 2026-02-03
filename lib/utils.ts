@@ -32,13 +32,15 @@ export function formatNumber(num: number): string {
  *
  * @example
  * formatDate(new Date("2024-01-15")) // => "January 15, 2024"
+ * formatDate("2024-01-15T10:00:00Z") // => "January 15, 2024"
  */
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | string): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
+  }).format(dateObj);
 }
 
 /**

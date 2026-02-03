@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Image from "next/image";
 import { Facebook, Linkedin, Instagram, Github, Youtube, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
