@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import MobileNav from "./mobile-nav";
 import MagneticButton from "@/components/ui/magnetic-button";
+import Modal from "@/components/ui/modal";
+import BookingForm from "@/components/forms/booking-form";
 
 /**
  * Header Component
@@ -29,6 +31,7 @@ import MagneticButton from "@/components/ui/magnetic-button";
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
   const pathname = usePathname();
 
   // Detect scroll position for shadow effect
@@ -44,7 +47,8 @@ export default function Header() {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
-  }, []);
+    setIsBookingOpen(false);
+  }, [pathname]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -65,6 +69,7 @@ export default function Header() {
     { name: "TEAM", href: "/team" },
     { name: "CAREER", href: "/career" },
     { name: "BLOG", href: "/blog" },
+    { name: "CONTACT", href: "/contact" },
   ];
 
   return (
@@ -124,7 +129,12 @@ export default function Header() {
                  animate={{ opacity: 1, scale: 1 }}
                  transition={{ delay: 0.5, duration: 0.3 }}
               >
-                  <MagneticButton href="/contact" variant="primary" className="px-5 py-3 text-xs rounded-lg" style={{ textShadow: "none" }}>
+                  <MagneticButton 
+                    variant="primary" 
+                    className="px-5 py-3 text-xs rounded-lg" 
+                    style={{ textShadow: "none" }}
+                    onClick={() => setIsBookingOpen(true)}
+                  >
                     BOOK MEETING
                   </MagneticButton>
               </motion.div>
@@ -133,26 +143,51 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="md:inline-flex md:hidden p-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:inline-flex md:hidden p-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 z-[1000] relative"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
-              aria-label="Open main menu"
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
+              <motion.svg
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
-                strokeWidth="2"
+                fill="none"
                 stroke="currentColor"
-                aria-hidden="true"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial="closed"
+                animate={isMobileMenuOpen ? "open" : "closed"}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"
+                <motion.line
+                  x1="4" y1="6" x2="20" y2="6"
+                  variants={{
+                    closed: { rotate: 0, y: 0 },
+                    open: { rotate: 45, y: 6 }
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  style={{ transformOrigin: "center" }}
                 />
-              </svg>
+                <motion.line
+                  x1="4" y1="12" x2="20" y2="12"
+                  variants={{
+                    closed: { opacity: 1 },
+                    open: { opacity: 0 }
+                  }}
+                  transition={{ duration: 0.2 }}
+                />
+                <motion.line
+                  x1="4" y1="18" x2="20" y2="18"
+                  variants={{
+                    closed: { rotate: 0, y: 0 },
+                    open: { rotate: -45, y: -6 }
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  style={{ transformOrigin: "center" }}
+                />
+              </motion.svg>
             </button>
           </motion.div>
         </nav>
@@ -164,6 +199,15 @@ export default function Header() {
         onClose={() => setIsMobileMenuOpen(false)}
         navigation={navigation}
       />
+
+      {/* Booking Modal */}
+      <Modal
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
+        title="Book a Meeting"
+      >
+        <BookingForm onSuccess={() => setIsBookingOpen(false)} />
+      </Modal>
     </>
   );
 }

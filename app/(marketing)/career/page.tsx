@@ -3,24 +3,49 @@ import Link from "next/link";
 import { getActiveCareers } from "@/data/careers";
 import Header from "@/components/layout/header";
 import PageHeader from "@/components/layout/page-header";
-
 import { formatDate } from "@/lib/utils";
 import { MapPin, Briefcase, DollarSign, ArrowRight } from "lucide-react";
+import { validateSanityConfig } from "@/sanity/env";
+
+// Type for Sanity career from API
+interface SanityCareer {
+  _id: string;
+  title: string;
+  slug: string;
+  department: string;
+  location: string;
+  type: "Full-time" | "Part-time" | "Contract" | "Remote";
+  description: any; // Portable Text
+  requirements: string[];
+  benefits: string[];
+  salary?: {
+    min?: number;
+    max?: number;
+    currency?: string;
+    period?: string;
+  };
+  isActive: boolean;
+  publishedAt: string;
+  applicationUrl?: string;
+  applicationEmail?: string;
+}
 
 /**
- * Career Page Metadata
+ * Generate metadata for career page
  */
-export const metadata: Metadata = {
-  title: "Careers | Hashtag Tech",
-  description:
-    "Join our team at Hashtag Tech. We're always looking for talented individuals to help us build amazing software solutions.",
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  return {
     title: "Careers | Hashtag Tech",
     description:
       "Join our team at Hashtag Tech. We're always looking for talented individuals to help us build amazing software solutions.",
-    type: "website",
-  },
-};
+    openGraph: {
+      title: "Careers | Hashtag Tech",
+      description:
+        "Join our team at Hashtag Tech. We're always looking for talented individuals to help us build amazing software solutions.",
+      type: "website",
+    },
+  };
+}
 
 /**
  * Revalidation time for ISR (300 seconds = 5 minutes)
@@ -29,9 +54,36 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 /**
+ * Fetch careers from Sanity API or fall back to hardcoded data
+ */
+async function fetchCareers(): Promise<Array<SanityCareer | ReturnType<typeof getActiveCareers>[number]>> {
+  const config = validateSanityConfig();
+
+  // Use Sanity if configured, otherwise fall back to hardcoded data
+  if (config.valid) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
+        next: { revalidate: 300 },
+      });
+
+      if (response.ok) {
+        const careers = await response.json();
+        return careers;
+      }
+    } catch (error) {
+      console.error("Failed to fetch from Sanity API, falling back to hardcoded data:", error);
+    }
+  }
+
+  // Fall back to hardcoded data
+  return getActiveCareers();
+}
+
+/**
  * Career Listing Page Component
  *
  * Displays all active job openings with titles, locations, and types.
+ * Supports both Sanity CMS and hardcoded data.
  * T089 [US6] Verify career listing shows only active job openings
  *
  * @example
@@ -39,8 +91,8 @@ export const revalidate = 300;
  * // Visited at /career
  * ```
  */
-export default function CareerPage() {
-  const careers = getActiveCareers();
+export default async function CareerPage() {
+  const careers = await fetchCareers();
 
   return (
     <>
@@ -66,9 +118,32 @@ export default function CareerPage() {
               </div>
             ) : (
               <div className="max-w-4xl mx-auto space-y-6">
-                {careers.map((career) => (
-                  <CareerCard key={career.id} career={career} />
-                ))}
+                {careers.map((career) => {
+                  // Handle both Sanity and hardcoded data formats
+                  // Check for 'id' which only exists in hardcoded Career type
+                  if ("id" in career) {
+                    // Hardcoded data format
+                    return <CareerCard key={career.id} career={career} />;
+                  } else {
+                    // Sanity data format - convert to CareerCard format
+                    const sanityCareer = career as SanityCareer;
+                    const adaptedCareer = {
+                      id: sanityCareer._id,
+                      title: sanityCareer.title,
+                      slug: sanityCareer.slug,
+                      department: sanityCareer.department,
+                      location: sanityCareer.location,
+                      type: sanityCareer.type,
+                      description: "",
+                      requirements: sanityCareer.requirements,
+                      benefits: sanityCareer.benefits,
+                      isActive: sanityCareer.isActive,
+                      publishedAt: sanityCareer.publishedAt,
+                      salary: sanityCareer.salary,
+                    };
+                    return <CareerCard key={sanityCareer._id} career={adaptedCareer} />;
+                  }
+                })}
               </div>
             )}
           </div>
@@ -153,8 +228,6 @@ export default function CareerPage() {
           </div>
         </section>
       </main>
-
-
     </>
   );
 }
@@ -162,7 +235,7 @@ export default function CareerPage() {
 /**
  * Career Card Component
  */
-function CareerCard({ career }: { career: typeof import("@/data/careers").careers[0] }) {
+function CareerCard({ career }: { career: ReturnType<typeof getActiveCareers>[number] | { id: string; title: string; slug: string; department: string; location: string; type: "Full-time" | "Part-time" | "Contract" | "Remote"; description: string; requirements: string[]; benefits: string[]; isActive: boolean; publishedAt: string; salary?: { min?: number; max?: number; currency?: string } } }) {
   return (
     <Link
       href={`/career/${career.slug}`}
@@ -216,15 +289,15 @@ function CareerCard({ career }: { career: typeof import("@/data/careers").career
            <div className="text-xs text-muted-foreground font-medium">
               Posted {formatDate(career.publishedAt)}
            </div>
-           
+
            {/* Animated Arrow Button */}
            <div className="hidden md:flex items-center gap-2 text-primary font-semibold text-sm opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-              Apply Now 
+              Apply Now
               <ArrowRight className="w-4 h-4" />
            </div>
         </div>
       </div>
-      
+
       {/* Decorative gradient blob on hover */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
     </Link>

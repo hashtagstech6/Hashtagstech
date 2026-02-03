@@ -1040,6 +1040,7 @@ See `references/` for detailed patterns:
 - `references/groq-cheatsheet.md` - Query examples
 - `references/seo-guide.md` - SEO implementation patterns
 - `references/nextjs-isr.md` - Caching strategies
+- `references/blog-rendering.md` - **NEW:** Complete blog rendering guide with code blocks, TOC, FAQs, images, and more
 
 ---
 
@@ -1089,7 +1090,24 @@ To achieve B2 certification in this skill:
 
 ---
 
-**Version**: 1.2.0
-**Last Updated**: 2025-01-XX
+**Version**: 1.3.0
+**Last Updated**: 2025-02-04
 **Proficiency Framework**: CEFR + Bloom's Taxonomy + DigComp
 **Progression**: A2 → A2 → B1 → B1 → B1 → B2 → B2 → B2
+
+## What's New (v1.3.0)
+
+- **NEW: Blog Rendering Guide** (`references/blog-rendering.md`) - Comprehensive guide for rendering blog content including:
+  - Portable Text components with full styling
+  - Code block syntax highlighting with `react-syntax-highlighter`
+  - Image rendering with Next.js optimization
+  - Table of Contents with intersection observer
+  - FAQ Accordion with JSON-LD structured data
+  - Related Posts component
+  - Like/Dislike functionality
+  - Breadcrumbs navigation
+  - Share buttons
+  - Reading time calculation
+- **NEW: Portable Text Components Template** (`templates/components/portable-text-components.tsx`)
+- **NEW: Extended Block Content Schema** (`templates/schemas/blockContentTypeExtended.ts`)
+- **NEW: FAQ Accordion Template** (`templates/components/FaqAccordion.tsx`)

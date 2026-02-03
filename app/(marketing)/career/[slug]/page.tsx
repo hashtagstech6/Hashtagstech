@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllCareers, getCareerBySlug } from "@/data/careers";
+import type { Career } from "@/types/career";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { formatDate } from "@/lib/utils";
@@ -13,15 +14,88 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PortableText from "@/components/blog/portable-text";
+import { validateSanityConfig } from "@/sanity/env";
+
+// Type for Sanity career from API
+interface SanityCareer {
+  _id: string;
+  title: string;
+  slug: string;
+  department: string;
+  location: string;
+  type: "Full-time" | "Part-time" | "Contract" | "Remote";
+  description: any; // Portable Text
+  requirements: string[];
+  benefits: string[];
+  salary?: {
+    min?: number;
+    max?: number;
+    currency?: string;
+    period?: string;
+  };
+  isActive: boolean;
+  publishedAt: string;
+  applicationUrl?: string;
+  applicationEmail?: string;
+}
 
 /**
  * Generate static params for all career pages
  */
 export async function generateStaticParams() {
+  // If Sanity is configured, fetch slugs from API
+  const config = validateSanityConfig();
+
+  if (config.valid) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
+        next: { revalidate: 300 },
+      });
+
+      if (response.ok) {
+        const careers = await response.json();
+        return careers.map((career: SanityCareer) => ({
+          slug: career.slug,
+        }));
+      }
+    } catch {
+      // Fall through to hardcoded data
+    }
+  }
+
+  // Fall back to hardcoded data
   const careers = getAllCareers();
   return careers.map((career) => ({
     slug: career.slug,
   }));
+}
+
+/**
+ * Fetch career by slug from Sanity or hardcoded data
+ */
+async function fetchCareer(slug: string): Promise<SanityCareer | ReturnType<typeof getCareerBySlug> | null> {
+  const config = validateSanityConfig();
+
+  // Try Sanity API first
+  if (config.valid) {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers/${slug}`,
+        { next: { revalidate: 300 } }
+      );
+
+      if (response.ok) {
+        const career = await response.json();
+        return career;
+      }
+    } catch {
+      // Fall through to hardcoded data
+    }
+  }
+
+  // Fall back to hardcoded data
+  return getCareerBySlug(slug) || null;
 }
 
 /**
@@ -34,7 +108,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const career = getCareerBySlug(slug);
+  const career = await fetchCareer(slug);
 
   if (!career) {
     return {
@@ -42,12 +116,17 @@ export async function generateMetadata({
     };
   }
 
+  const isSanityData = !("id" in career) && "_id" in career;
+  const title = career.title;
+  const location = isSanityData ? (career as SanityCareer).location : (career as Career).location;
+  const type = isSanityData ? (career as SanityCareer).type : (career as Career).type;
+
   return {
-    title: `${career.title} | Careers at Hashtag Tech`,
-    description: `Apply for ${career.title} at Hashtag Tech. ${career.type} position in ${career.location}.`,
+    title: `${title} | Careers at Hashtag Tech`,
+    description: `Apply for ${title} at Hashtag Tech. ${type} position in ${location}.`,
     openGraph: {
-      title: career.title,
-      description: `Apply for ${career.title} at Hashtag Tech.`,
+      title,
+      description: `Apply for ${title} at Hashtag Tech.`,
       type: "website",
     },
   };
@@ -63,6 +142,7 @@ export const revalidate = 300;
  * Career Detail Page Component
  *
  * Displays full job posting with description, requirements, and benefits.
+ * Supports both Sanity CMS (with Portable Text) and hardcoded data.
  * T090 [US6] Verify job posting displays full description, requirements, benefits
  *
  * @example
@@ -76,11 +156,31 @@ export default async function CareerPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const career = getCareerBySlug(slug);
+  const career = await fetchCareer(slug);
 
   if (!career) {
     notFound();
   }
+
+  // Check if this is Sanity data (has Portable Text description) or hardcoded data
+  const isSanityData = !("id" in career) && ("_id" in career || Array.isArray((career as SanityCareer).description));
+
+  // Normalize data for rendering with proper type assertions
+  const title = career.title;
+  const department = isSanityData ? (career as SanityCareer).department : (career as Career).department;
+  const location = isSanityData ? (career as SanityCareer).location : (career as Career).location;
+  const type = isSanityData ? (career as SanityCareer).type : (career as Career).type;
+  const publishedAt = isSanityData ? (career as SanityCareer).publishedAt : (career as Career).publishedAt;
+  const salary = isSanityData ? (career as SanityCareer).salary : (career as Career).salary;
+  const requirements = isSanityData ? (career as SanityCareer).requirements : (career as Career).requirements;
+  const benefits = isSanityData ? (career as SanityCareer).benefits : (career as Career).benefits;
+  const applicationUrl = isSanityData ? (career as SanityCareer).applicationUrl : undefined;
+  const applicationEmail = isSanityData ? (career as SanityCareer).applicationEmail : undefined;
+  const description = isSanityData ? (career as SanityCareer).description : null;
+  const hardcodedDescription = !isSanityData ? (career as Career).description : "";
+
+  // Determine application email
+  const applyEmail = applicationEmail || "careers@hashtagstech.com";
 
   return (
     <>
@@ -108,7 +208,7 @@ export default async function CareerPage({
                 <div className="flex-1">
                   {/* Title */}
                   <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                    {career.title}
+                    {title}
                   </h1>
 
                   {/* Meta Info */}
@@ -116,42 +216,45 @@ export default async function CareerPage({
                     {/* Department */}
                     <div className="flex items-center gap-2">
                       <Briefcase className="w-4 h-4" />
-                      <span>{career.department}</span>
+                      <span>{department}</span>
                     </div>
 
                     {/* Location */}
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{career.location}</span>
+                      <span>{location}</span>
                     </div>
 
                     {/* Type */}
                     <div
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        career.type === "Remote"
+                        type === "Remote"
                           ? "bg-green-100 text-green-700"
-                          : career.type === "Full-time"
+                          : type === "Full-time"
                           ? "bg-blue-100 text-blue-700"
                           : "bg-purple-100 text-purple-700"
                       }`}
                     >
-                      {career.type}
+                      {type}
                     </div>
 
                     {/* Posted Date */}
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      <span>Posted {formatDate(career.publishedAt)}</span>
+                      <span>Posted {formatDate(publishedAt)}</span>
                     </div>
 
                     {/* Salary */}
-                    {career.salary && (
+                    {salary && (
                       <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
                         <span>
-                          {career.salary.min?.toLocaleString()} -{" "}
-                          {career.salary.max?.toLocaleString()}{" "}
-                          {career.salary.currency}/year
+                          {salary.min?.toLocaleString()} -{" "}
+                          {salary.max?.toLocaleString()}{" "}
+                          {salary.currency}
+                          {isSanityData && "period" in (career as SanityCareer).salary!
+                            ? `/${(career as SanityCareer).salary!.period}`
+                            : "/year"}
                         </span>
                       </div>
                     )}
@@ -159,9 +262,19 @@ export default async function CareerPage({
                 </div>
 
                 {/* Apply Button */}
-                <Button size="lg" className="md:self-start">
-                  Apply Now
-                </Button>
+                {applicationUrl ? (
+                  <Button size="lg" className="md:self-start" asChild>
+                    <a href={applicationUrl} target="_blank" rel="noopener noreferrer">
+                      Apply Now
+                    </a>
+                  </Button>
+                ) : (
+                  <Button size="lg" className="md:self-start" asChild>
+                    <a href={`mailto:${applyEmail}`}>
+                      Apply Now
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -177,19 +290,25 @@ export default async function CareerPage({
                   {/* Description */}
                   <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
                     <h2 className="text-2xl font-bold mb-4">About the Role</h2>
-                    <div
-                      className="prose prose-lg max-w-none"
-                      dangerouslySetInnerHTML={{
-                        __html: career.description.replace(/\n/g, "<br />"),
-                      }}
-                    />
+                    {isSanityData ? (
+                      <div className="prose prose-lg max-w-none">
+                        <PortableText value={description} />
+                      </div>
+                    ) : (
+                      <div
+                        className="prose prose-lg max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: hardcodedDescription.replace(/\n/g, "<br />"),
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Requirements */}
                   <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
                     <h2 className="text-2xl font-bold mb-4">Requirements</h2>
                     <ul className="space-y-3">
-                      {career.requirements.map((req, index) => (
+                      {requirements.map((req: string, index: number) => (
                         <li key={index} className="flex items-start gap-3">
                           <svg
                             className="w-5 h-5 text-primary flex-shrink-0 mt-0.5"
@@ -217,7 +336,7 @@ export default async function CareerPage({
                   <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
                     <h2 className="text-xl font-bold mb-4">Benefits</h2>
                     <ul className="space-y-3">
-                      {career.benefits.map((benefit, index) => (
+                      {benefits.map((benefit: string, index: number) => (
                         <li key={index} className="flex items-start gap-3">
                           <svg
                             className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
@@ -245,9 +364,9 @@ export default async function CareerPage({
                       <Button variant="outline" size="sm" asChild>
                         <a
                           href={`https://twitter.com/intent/tweet?text=Check+out+this+job+opening+at+Hashtag+Tech:+${encodeURIComponent(
-                            career.title
+                            title
                           )}&url=${encodeURIComponent(
-                            `https://hashtagstech.com/career/${career.slug}`
+                            `https://hashtagstech.com/career/${slug}`
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -258,7 +377,7 @@ export default async function CareerPage({
                       <Button variant="outline" size="sm" asChild>
                         <a
                           href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                            `https://hashtagstech.com/career/${career.slug}`
+                            `https://hashtagstech.com/career/${slug}`
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -284,15 +403,15 @@ export default async function CareerPage({
               <p className="text-lg text-white/90 mb-8">
                 Send your resume and cover letter to{" "}
                 <a
-                  href="mailto:careers@hashtagstech.com"
+                  href={`mailto:${applyEmail}`}
                   className="underline hover:no-underline"
                 >
-                  careers@hashtagstech.com
+                  {applyEmail}
                 </a>
                 . We'll get back to you within a week.
               </p>
               <Button size="lg" variant="white" asChild>
-                <a href="mailto:careers@hashtagstech.com">
+                <a href={`mailto:${applyEmail}`}>
                   Apply via Email
                 </a>
               </Button>

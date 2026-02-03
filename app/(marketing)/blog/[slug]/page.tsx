@@ -3,16 +3,78 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getAllBlogPosts, getBlogPostBySlug } from "@/data/blog-posts";
+import type { BlogPost } from "@/types/blog";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { formatDate } from "@/lib/utils";
 import { BlogFeaturedImage, RelatedPostCard } from "@/components/blog/blog-card";
+import PortableText from "@/components/blog/portable-text";
+import { validateSanityConfig } from "@/sanity/env";
+
+// Type for Sanity blog post from API
+interface SanityBlogPost {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  mainImage: {
+    asset: {
+      _id: string;
+      url: string;
+    };
+    alt: string;
+  };
+  content: any; // Portable Text array
+  author: {
+    _id: string;
+    name: string;
+    slug: string;
+    image: {
+      asset: {
+        _id: string;
+        url: string;
+      };
+      alt: string;
+    };
+    bio?: string;
+    jobTitle?: string;
+  };
+  categories: Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    color?: string;
+  }>;
+  publishedAt: string;
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
 
 /**
  * Generate static params for all blog posts
- * This enables static generation at build time
  */
 export async function generateStaticParams() {
+  const config = validateSanityConfig();
+
+  if (config.valid) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/posts`, {
+        next: { revalidate: 60 },
+      });
+
+      if (response.ok) {
+        const posts: SanityBlogPost[] = await response.json();
+        return posts.map((post) => ({
+          slug: post.slug,
+        }));
+      }
+    } catch {
+      // Fall through to hardcoded data
+    }
+  }
+
+  // Fall back to hardcoded data
   const posts = getAllBlogPosts();
   return posts.map((post) => ({
     slug: post.slug,
@@ -20,8 +82,33 @@ export async function generateStaticParams() {
 }
 
 /**
+ * Fetch blog post by slug from Sanity or hardcoded data
+ */
+async function fetchBlogPost(slug: string): Promise<SanityBlogPost | BlogPost | null> {
+  const config = validateSanityConfig();
+
+  // Try Sanity API first
+  if (config.valid) {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/posts/${slug}`,
+        { next: { revalidate: 60 } }
+      );
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch {
+      // Fall through to hardcoded data
+    }
+  }
+
+  // Fall back to hardcoded data
+  return getBlogPostBySlug(slug) || null;
+}
+
+/**
  * Generate metadata for each blog post
- * T079 [US5] Add SEO metadata (title, description, Open Graph tags) to blog pages
  */
 export async function generateMetadata({
   params,
@@ -29,7 +116,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await fetchBlogPost(slug);
 
   if (!post) {
     return {
@@ -37,49 +124,45 @@ export async function generateMetadata({
     };
   }
 
+  const title = post.title;
+  const excerpt = "excerpt" in post ? post.excerpt : "";
+  const imageUrl = typeof post.mainImage === "string"
+    ? post.mainImage
+    : (post.mainImage as any).asset?.url || "";
+  const authorName = "author" in post ? post.author.name : "";
+  const publishedAt = "publishedAt" in post ? post.publishedAt : "";
+
   return {
-    title: post.seoTitle || `${post.title} | Hashtag Tech Blog`,
-    description: post.seoDescription || post.excerpt,
+    title: `${title} | Hashtag Tech Blog`,
+    description: excerpt,
     openGraph: {
-      title: post.title,
-      description: post.seoDescription || post.excerpt,
+      title,
+      description: excerpt,
       type: "article",
-      publishedTime: post.publishedAt,
-      authors: [post.author.name],
+      publishedTime: publishedAt,
+      authors: [authorName],
       images: [
         {
-          url: post.mainImage,
+          url: imageUrl,
           width: 1200,
           height: 630,
-          alt: post.title,
+          alt: title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
-      description: post.seoDescription || post.excerpt,
-      images: [post.mainImage],
+      title,
+      description: excerpt,
+      images: [imageUrl],
     },
   };
 }
 
-/**
- * Revalidation time for ISR (60 seconds)
- * T078 [US5] Implement ISR with 60-second revalidation on blog post detail page
- */
 export const revalidate = 60;
 
 /**
  * Blog Post Detail Page Component
- *
- * Displays full blog post content with author info and SEO metadata.
- * T081 [US5] Verify blog post displays full content with author info
- *
- * @example
- * ```tsx
- * // Visited at /blog/building-scalable-ai-agents
- * ```
  */
 export default async function BlogPostPage({
   params,
@@ -87,11 +170,31 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await fetchBlogPost(slug);
 
   if (!post) {
     notFound();
   }
+
+  // Check data type
+  const isSanityData = !("id" in post) && "_id" in post;
+
+  // Normalize data with proper type assertions
+  const title = post.title;
+  const excerpt = isSanityData ? (post as SanityBlogPost).excerpt : (post as BlogPost).excerpt;
+  const categories = isSanityData ? (post as SanityBlogPost).categories : (post as BlogPost).categories;
+  const author = isSanityData ? (post as SanityBlogPost).author : (post as BlogPost).author;
+  const publishedAt = isSanityData ? (post as SanityBlogPost).publishedAt : (post as BlogPost).publishedAt;
+  const authorImage = typeof author?.image === "string"
+    ? author.image
+    : (author as SanityBlogPost["author"])?.image?.asset?.url || "/images/authors/placeholder.jpg";
+  const authorBio = author?.bio || "";
+  const mainImageUrl = isSanityData
+    ? ((post as SanityBlogPost).mainImage as any)?.asset?.url || "/images/blog/placeholder.jpg"
+    : (post as BlogPost).mainImage;
+  const content = isSanityData ? (post as SanityBlogPost).content : null;
+  const hardcodedContent = !isSanityData ? (post as BlogPost).content : "";
+  const postId = isSanityData ? (post as SanityBlogPost)._id : (post as BlogPost).id;
 
   return (
     <>
@@ -121,16 +224,16 @@ export default async function BlogPostPage({
                   </li>
                   <li>/</li>
                   <li className="text-foreground font-medium truncate">
-                    {post.title}
+                    {title}
                   </li>
                 </ol>
               </nav>
 
               {/* Categories */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {post.categories.map((category) => (
+                {categories.map((category: any) => (
                   <Link
-                    key={category.id}
+                    key={category.id || category._id}
                     href={`/blog/category/${category.slug}`}
                     className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                   >
@@ -141,24 +244,24 @@ export default async function BlogPostPage({
 
               {/* Title */}
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                {post.title}
+                {title}
               </h1>
 
               {/* Author & Date */}
               <div className="flex items-center gap-4">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
                   <Image
-                    src={post.author.image}
-                    alt={post.author.name}
+                    src={authorImage}
+                    alt={author.name}
                     fill
                     className="object-cover"
                     sizes="48px"
                   />
                 </div>
                 <div>
-                  <p className="font-medium">{post.author.name}</p>
+                  <p className="font-medium">{author.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(post.publishedAt)}
+                    {formatDate(publishedAt)}
                   </p>
                 </div>
               </div>
@@ -169,7 +272,7 @@ export default async function BlogPostPage({
         {/* Featured Image */}
         <div className="container mx-auto px-4 -mt-8">
           <div className="max-w-4xl mx-auto">
-            <BlogFeaturedImage src={post.mainImage} alt={post.title} />
+            <BlogFeaturedImage src={mainImageUrl} alt={title} />
           </div>
         </div>
 
@@ -179,25 +282,31 @@ export default async function BlogPostPage({
             <div className="max-w-3xl mx-auto">
               {/* Excerpt */}
               <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-12">
-                {post.excerpt}
+                {excerpt}
               </p>
 
               {/* Content */}
-              <div className="prose prose-lg max-w-none">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: post.content.replace(/\n/g, "<br />"),
-                  }}
-                />
-              </div>
+              {isSanityData && content ? (
+                <div className="prose prose-lg max-w-none">
+                  <PortableText value={content} />
+                </div>
+              ) : (
+                <div className="prose prose-lg max-w-none">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: hardcodedContent.replace(/\n/g, "<br />"),
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Author Bio */}
               <div className="mt-16 pt-8 border-t border-border">
                 <div className="flex items-start gap-6">
                   <div className="relative w-20 h-20 rounded-full overflow-hidden bg-muted flex-shrink-0">
                     <Image
-                      src={post.author.image}
-                      alt={post.author.name}
+                      src={authorImage}
+                      alt={author.name}
                       fill
                       className="object-cover"
                       sizes="80px"
@@ -205,10 +314,10 @@ export default async function BlogPostPage({
                   </div>
                   <div>
                     <h3 className="text-xl font-bold mb-2">
-                      {post.author.name}
+                      {author.name}
                     </h3>
                     <p className="text-muted-foreground">
-                      {post.author.bio}
+                      {authorBio}
                     </p>
                   </div>
                 </div>
@@ -226,7 +335,7 @@ export default async function BlogPostPage({
               </h2>
               <div className="grid md:grid-cols-3 gap-8">
                 {getAllBlogPosts()
-                  .filter((p) => p.id !== post.id)
+                  .filter((p) => p.id !== postId)
                   .slice(0, 3)
                   .map((relatedPost) => (
                     <RelatedPostCard key={relatedPost.id} post={relatedPost} />

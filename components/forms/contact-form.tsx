@@ -8,6 +8,8 @@ import { ContactFormSchema } from "@/types/contact-form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { Select } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 /**
@@ -46,6 +48,8 @@ export function ContactForm() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
     reset,
   } = useForm<ContactFormData>({
@@ -117,7 +121,7 @@ export function ContactForm() {
       {submitStatus.type && (
         <div
           className={cn(
-            "flex items-start gap-3 p-4 rounded-lg",
+            "flex items-start gap-3 p-4 rounded-xl",
             submitStatus.type === "success"
               ? "bg-green-50 text-green-800 border border-green-200"
               : "bg-red-50 text-red-800 border border-red-200"
@@ -134,155 +138,146 @@ export function ContactForm() {
         </div>
       )}
 
-      {/* Name Field (Required) */}
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-surface-foreground mb-2"
-        >
-          Name <span className="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <Input
-          id="name"
-          type="text"
-          placeholder="Your full name"
-          {...register("name")}
-          aria-invalid={errors.name ? "true" : "false"}
-          aria-describedby={errors.name ? "name-error" : undefined}
-          className={cn(
-            errors.name &&
-              "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
+      {/* Row 1: Name & Email (2-column on desktop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* Name Field */}
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-semibold text-foreground mb-2"
+          >
+            Name <span className="text-primary" aria-hidden="true">*</span>
+          </label>
+          <Input
+            id="name"
+            type="text"
+            placeholder="John Doe"
+            {...register("name")}
+            aria-invalid={errors.name ? "true" : "false"}
+            aria-describedby={errors.name ? "name-error" : undefined}
+            className={cn(
+              "h-12",
+              errors.name &&
+                "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
+            )}
+            disabled={isSubmitting}
+          />
+          {errors.name && (
+            <p
+              id="name-error"
+              className="mt-1.5 text-sm text-red-600"
+              role="alert"
+            >
+              {errors.name.message}
+            </p>
           )}
-          disabled={isSubmitting}
-        />
-        {errors.name && (
-          <p
-            id="name-error"
-            className="mt-1 text-sm text-red-600"
-            role="alert"
-          >
-            {errors.name.message}
-          </p>
-        )}
-      </div>
+        </div>
 
-      {/* Email Field (Required, Validated) */}
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-surface-foreground mb-2"
-        >
-          Email <span className="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="your.email@example.com"
-          {...register("email")}
-          aria-invalid={errors.email ? "true" : "false"}
-          aria-describedby={errors.email ? "email-error" : undefined}
-          className={cn(
-            errors.email &&
-              "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
+        {/* Email Field */}
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold text-foreground mb-2"
+          >
+            Email <span className="text-primary" aria-hidden="true">*</span>
+          </label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="john@company.com"
+            {...register("email")}
+            aria-invalid={errors.email ? "true" : "false"}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className={cn(
+              "h-12",
+              errors.email &&
+                "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
+            )}
+            disabled={isSubmitting}
+          />
+          {errors.email && (
+            <p
+              id="email-error"
+              className="mt-1.5 text-sm text-red-600"
+              role="alert"
+            >
+              {errors.email.message}
+            </p>
           )}
-          disabled={isSubmitting}
-        />
-        {errors.email && (
-          <p
-            id="email-error"
-            className="mt-1 text-sm text-red-600"
-            role="alert"
+        </div>
+      </div>
+
+      {/* Row 2: Phone & Company (2-column on desktop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* Phone Field */}
+        <div>
+          <label
+            htmlFor="phone"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
-            {errors.email.message}
-          </p>
-        )}
-      </div>
+            Phone <span className="text-muted-foreground font-normal">(optional)</span>
+          </label>
+          <PhoneInput
+            value={watch('phone')}
+            onChange={(val) => setValue("phone", val as string ?? "", { shouldValidate: true })}
+            disabled={isSubmitting}
+            error={!!errors.phone}
+            helperText={errors.phone?.message}
+          />
+        </div>
 
-      {/* Phone Field (Optional) */}
-      <div>
-        <label
-          htmlFor="phone"
-          className="block text-sm font-medium text-surface-foreground mb-2"
-        >
-          Phone <span className="text-muted-foreground">(optional)</span>
-        </label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="+1 (555) 000-0000"
-          {...register("phone")}
-          aria-invalid={errors.phone ? "true" : "false"}
-          aria-describedby={errors.phone ? "phone-error" : undefined}
-          disabled={isSubmitting}
-        />
-        {errors.phone && (
-          <p id="phone-error" className="mt-1 text-sm text-red-600" role="alert">
-            {errors.phone.message}
-          </p>
-        )}
-      </div>
-
-      {/* Company Field (Optional) */}
-      <div>
-        <label
-          htmlFor="company"
-          className="block text-sm font-medium text-surface-foreground mb-2"
-        >
-          Company <span className="text-muted-foreground">(optional)</span>
-        </label>
-        <Input
-          id="company"
-          type="text"
-          placeholder="Your company name"
-          {...register("company")}
-          aria-invalid={errors.company ? "true" : "false"}
-          aria-describedby={errors.company ? "company-error" : undefined}
-          disabled={isSubmitting}
-        />
-        {errors.company && (
-          <p
-            id="company-error"
-            className="mt-1 text-sm text-red-600"
-            role="alert"
+        {/* Company Field */}
+        <div>
+          <label
+            htmlFor="company"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
-            {errors.company.message}
-          </p>
-        )}
+            Company <span className="text-muted-foreground font-normal">(optional)</span>
+          </label>
+          <Input
+            id="company"
+            type="text"
+            placeholder="Your company"
+            {...register("company")}
+            aria-invalid={errors.company ? "true" : "false"}
+            aria-describedby={errors.company ? "company-error" : undefined}
+            className="h-12"
+            disabled={isSubmitting}
+          />
+          {errors.company && (
+            <p
+              id="company-error"
+              className="mt-1.5 text-sm text-red-600"
+              role="alert"
+            >
+              {errors.company.message}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Service Field (Dropdown) */}
+      {/* Service Field (Full Width) */}
       <div>
         <label
           htmlFor="service"
-          className="block text-sm font-medium text-surface-foreground mb-2"
+          className="block text-sm font-semibold text-foreground mb-2"
         >
-          Service <span className="text-red-500" aria-hidden="true">*</span>
+          Service <span className="text-primary" aria-hidden="true">*</span>
         </label>
-        <select
-          id="service"
-          {...register("service")}
-          aria-invalid={errors.service ? "true" : "false"}
-          aria-describedby={errors.service ? "service-error" : undefined}
-          className={cn(
-            "w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            "transition-colors",
-            errors.service &&
-              "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
-          )}
+        <Select
+          options={[...SERVICE_OPTIONS]}
+          value={watch("service")}
+          onChange={(val) => setValue("service", val as ContactFormData["service"], { shouldValidate: true })}
+          placeholder="Select a service..."
+          searchPlaceholder="Search services..."
+          emptyText="No service found."
           disabled={isSubmitting}
-        >
-          {SERVICE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          error={!!errors.service}
+        />
         {errors.service && (
           <p
             id="service-error"
-            className="mt-1 text-sm text-red-600"
+            className="mt-1.5 text-sm text-red-600"
             role="alert"
           >
             {errors.service.message}
@@ -290,33 +285,33 @@ export function ContactForm() {
         )}
       </div>
 
-      {/* Message Field (Required, max 5000 chars) */}
+      {/* Message Field (Full Width) */}
       <div>
         <label
           htmlFor="message"
-          className="block text-sm font-medium text-surface-foreground mb-2"
+          className="block text-sm font-semibold text-foreground mb-2"
         >
-          Message <span className="text-red-500" aria-hidden="true">*</span>
+          Message <span className="text-primary" aria-hidden="true">*</span>
         </label>
         <textarea
           id="message"
           rows={5}
-          placeholder="Tell us about your project..."
+          placeholder="Tell us about your project, goals, and timeline..."
           maxLength={5000}
           {...register("message")}
           aria-invalid={errors.message ? "true" : "false"}
           aria-describedby={errors.message ? "message-error" : "message-hint"}
           className={cn(
-            "w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground",
+            "w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            "resize-y",
+            "resize-y min-h-[120px]",
             errors.message &&
               "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500"
           )}
           disabled={isSubmitting}
         />
-        <div className="flex justify-between items-center mt-1">
+        <div className="flex justify-between items-center mt-1.5">
           {errors.message ? (
             <p
               id="message-error"
@@ -326,8 +321,8 @@ export function ContactForm() {
               {errors.message.message}
             </p>
           ) : (
-            <p id="message-hint" className="text-sm text-muted-foreground">
-              Please provide at least 10 characters
+            <p id="message-hint" className="text-xs text-muted-foreground">
+              Minimum 10 characters
             </p>
           )}
         </div>
