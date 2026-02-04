@@ -529,44 +529,52 @@ Foundational (T012-T023)
 
 ---
 
-## Phase 15: Sanity CMS Integration (Deferred)
+## Phase 15: Sanity CMS Integration
 
 **Goal**: Replace hardcoded data with Sanity CMS-managed content
 
-**Status**: DEFERRED until Phase 1 is complete and verified
+**Status**: IN PROGRESS
 
 ### Sanity Setup Tasks
 
-- [ ] S001 Install Sanity CMS: `npm install sanity next-sanity`
-- [ ] S002 Initialize Sanity Studio: `npx sanity@latest init`
-- [ ] S003 Create environment variables: `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_API_READ_TOKEN`
-- [ ] S004 Create `sanity/schemaTypes/postType.ts` for blog posts (FR-031)
-- [ ] S005 Create `sanity/schemaTypes/careerType.ts` for job openings (FR-032)
-- [ ] S006 Create `sanity/schemaTypes/authorType.ts` for authors (FR-033)
-- [ ] S007 Create `sanity/schemaTypes/categoryType.ts` for categories (FR-034)
-- [ ] S008 Create `sanity/schemaTypes/serviceType.ts` for services (FR-035)
-- [ ] S009 Create `sanity/schemaTypes/aiServiceType.ts` for AI services (FR-036)
+- [X] S001 Install Sanity CMS: `npm install sanity next-sanity` (already installed)
+- [X] S002 Initialize Sanity Studio: `npx sanity@latest init` (already initialized)
+- [X] S003 Create environment variables: `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_API_READ_TOKEN` (already configured)
+- [X] S004 Create `sanity/schemaTypes/postType.ts` for blog posts (FR-031) (already exists)
+- [X] S005 Create `sanity/schemaTypes/careerType.ts` for job openings (FR-032) (already exists)
+- [X] S006 Create `sanity/schemaTypes/authorType.ts` for authors (FR-033) (already exists)
+- [X] S007 Create `sanity/schemaTypes/categoryType.ts` for categories (FR-034) (already exists)
+- [X] S008 Create `sanity/schemaTypes/serviceType.ts` for services (FR-035) (created)
+- [X] S009 Create `sanity/schemaTypes/aiServiceType.ts` for AI services (FR-036) (created)
+- [X] S009a Create `sanity/schemaTypes/successStoryType.ts` (created)
+- [X] S009b Create `sanity/schemaTypes/teamMemberType.ts` (created)
+- [X] S009c Create `sanity/schemaTypes/globalPartnerType.ts` (created)
+- [X] S009d Create `sanity/schemaTypes/clientType.ts` (created)
 
 ### API Route Tasks (Sanity)
 
-- [ ] S010 Create `lib/sanity/client.ts` with Sanity client configuration
-- [ ] S011 Create `app/api/posts/route.ts` with ISR 60s revalidation (FR-037)
-- [ ] S012 Create `app/api/posts/[slug]/route.ts` with ISR 60s revalidation (FR-038)
-- [ ] S013 Create `app/api/careers/route.ts` with ISR 300s revalidation (FR-039)
-- [ ] S014 Create `app/api/careers/[slug]/route.ts` with ISR 300s revalidation (FR-040)
-- [ ] S015 Create `app/api/services/route.ts` with ISR 3600s revalidation (FR-041)
+- [X] S010 Create `sanity/lib/client.ts` with Sanity client configuration (already exists)
+- [X] S011 Create `app/api/posts/route.ts` with ISR 60s revalidation (FR-037) (already exists)
+- [X] S012 Create `app/api/posts/[slug]/route.ts` with ISR 60s revalidation (FR-038) (already exists)
+- [X] S013 Create `app/api/careers/route.ts` with ISR 300s revalidation (FR-039) (already exists)
+- [X] S014 Create `app/api/careers/[slug]/route.ts` with ISR 300s revalidation (FR-040) (already exists)
+- [X] S015 Create `app/api/services/route.ts` with ISR 3600s revalidation (FR-041) (created)
 - [ ] S016 Create `app/api/services/[slug]/route.ts` with ISR 3600s revalidation (FR-042)
-- [ ] S017 Create `app/api/ai-services/route.ts` with ISR 3600s revalidation (FR-043)
+- [X] S017 Create `app/api/ai-services/route.ts` with ISR 3600s revalidation (FR-043) (created)
 
 ### Migration Tasks
 
 - [ ] S018 Update blog pages to fetch from `/api/posts` instead of hardcoded data
 - [ ] S019 Update career pages to fetch from `/api/careers` instead of hardcoded data
-- [ ] S020 Update Services Grid section to fetch from `/api/services` instead of hardcoded data
-- [ ] S021 Update AI Services section to fetch from `/api/ai-services` instead of hardcoded data
-- [ ] S021 Remove hardcoded data constants after verification
-- [ ] S022 Verify all pages load correctly with Sanity CMS data
-- [ ] S023 Test ISR revalidation: verify content updates after revalidation time
+- [X] S020 Update Services Grid section to fetch from `/api/services` instead of hardcoded data (completed)
+- [X] S021 Update AI Services section to fetch from `/api/ai-services` instead of hardcoded data (completed)
+- [ ] S021a Update Success Stories section to fetch from `/api/success-stories`
+- [ ] S021b Update Testimonials section to fetch from `/api/clients`
+- [ ] S021c Update Team section to fetch from `/api/team`
+- [ ] S021d Update Partners section to fetch from `/api/global-partners`
+- [ ] S022 Remove hardcoded data constants after verification
+- [ ] S023 Verify all pages load correctly with Sanity CMS data
+- [ ] S024 Test ISR revalidation: verify content updates after revalidation time
 
 ---
 

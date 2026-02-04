@@ -38,7 +38,8 @@ export default function Footer() {
   const quickLinks = [
     { name: "Home", href: "/" },
     { name: "Services", href: "/#services" },
-    { name: "About Us", href: "/#about" },
+    { name: "About Us", href: "/about" },
+    { name: "Our Team", href: "/team" },
     { name: "Careers", href: "/career" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },
@@ -131,7 +132,7 @@ export default function Footer() {
                 <li key={service.name}>
                   <Link
                     href={service.href}
-                    className="group flex items-center text-sm text-white/60 hover:text-primary transition-colors duration-300"
+                    className="group flex items-center text-sm text-white/60 hover:text-primary hover:no-underline transition-colors duration-300"
                   >
                     <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300 text-primary mr-0 group-hover:mr-2">
                        &gt;
@@ -155,7 +156,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="group flex items-center text-sm text-white/60 hover:text-primary transition-colors duration-300"
+                    className="group flex items-center text-sm text-white/60 hover:text-primary hover:no-underline transition-colors duration-300"
                   >
                     <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300 text-primary mr-0 group-hover:mr-2">
                        &gt;
@@ -182,7 +183,7 @@ export default function Footer() {
                     <a
                       key={email.label}
                       href={`mailto:${email.email}`}
-                      className="block text-sm text-white/80 hover:text-primary transition-colors"
+                      className="block text-sm text-white/80 hover:text-primary hover:no-underline transition-colors"
                     >
                       {email.email}
                     </a>
@@ -214,8 +215,8 @@ export default function Footer() {
             &copy; {currentYear} Hashtag Tech. All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-white/40">
-             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+             <Link href="/privacy" className="hover:text-white hover:no-underline transition-colors">Privacy Policy</Link>
+             <Link href="/terms" className="hover:text-white hover:no-underline transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

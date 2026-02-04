@@ -59,7 +59,7 @@ export default function GlobalPartners() {
                 </div>
 
                 {/* Info Overlay - Glassmorphism Card */}
-                <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+                <div className="absolute bottom-6 left-6 right-6 transition-all duration-300 ease-out opacity-100 translate-y-0 lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0">
                   <div className="bg-white/80 backdrop-blur-md border border-white/20 rounded-xl p-4 text-white shadow-lg">
                     <p className="text-primary text-xs font-bold uppercase tracking-wider mb-1">
                       {partner.role}

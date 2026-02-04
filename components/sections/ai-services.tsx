@@ -1,27 +1,52 @@
 "use client";
 
-import { aiServices } from "@/data/ai-services";
+import { useState, useEffect } from "react";
 import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 
+interface AIService {
+  _id: string;
+  title: string;
+  slug: string;
+  number: string;
+  shortDescription: string;
+  features: string[];
+  order: number;
+  icon?: string;
+  isActive: boolean;
+}
+
 /**
  * AI Services Section Component
  *
- * Three-column layout matching screenshot (6.png):
- * - "Your Partner In AI Transformation" subtitle
- * - "10x Your Business with AI!" main heading
- * - 3 columns: AI Voice Agents, AI Smart Chatbots, Custom AI Agents
- * - Each column has title with numbered badge, description, features with red checkmarks
- * - No card borders - clean flat design
- *
- * @example
- * ```tsx
- * <AIServices />
- * ```
+ * Fetches AI services from Sanity CMS API and displays them in a three-column layout.
  */
 export default function AIServices() {
+  const [aiServices, setAIServices] = useState<AIService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAIServices() {
+      try {
+        const response = await fetch("/api/ai-services");
+        if (!response.ok) throw new Error("Failed to fetch AI services");
+        const data = await response.json();
+        setAIServices(data);
+      } catch (error) {
+        console.error("Error fetching AI services:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAIServices();
+  }, []);
+
+  if (loading) {
+    return null; // Or show a loading skeleton
+  }
+
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
@@ -40,7 +65,7 @@ export default function AIServices() {
         {/* AI Services Grid - 3 Columns */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {aiServices.map((service, index) => (
-            <AIServiceColumn key={service.id} service={service} index={index} />
+            <AIServiceColumn key={service._id} service={service} index={index} />
           ))}
         </div>
 
@@ -56,7 +81,7 @@ export default function AIServices() {
                       src="/images/chess-knight.png"
                       alt="Chess Knight"
                       fill
-                      className="object-cover md:object-contain"
+                      className="object-contain"
                     />
                   </div>
                 </div>
@@ -95,7 +120,7 @@ function AIServiceColumn({
   service,
   index,
 }: {
-  service: (typeof aiServices)[0];
+  service: AIService;
   index: number;
 }) {
   return (

@@ -117,15 +117,15 @@ export default function SuccessStories() {
               <div
                 className={cn(
                   "lg:hidden overflow-hidden transition-all duration-300",
-                  expandedClient === client.id ? "max-h-48 py-3" : "max-h-0"
+                  expandedClient === client.id ? "max-h-62 py-3" : "max-h-0"
                 )}
               >
                 <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
                   <Image
-                    src={index === 0 ? "/images/1.png" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
+                    src={index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
                     alt={`${client.name} project`}
                     fill
-                    className="object-contain p-3"
+                    className="object-cover"
                   />
                 </div>
               </div>

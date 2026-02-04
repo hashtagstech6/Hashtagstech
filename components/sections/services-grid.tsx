@@ -1,27 +1,52 @@
 "use client";
 
-import { services } from "@/data/services";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 
+interface Service {
+  _id: string;
+  title: string;
+  slug: string;
+  category: string;
+  shortDescription: string;
+  features: string[];
+  ctaText: string;
+  ctaStyle: "primary" | "secondary";
+  order: number;
+  icon?: string;
+}
+
 /**
  * Services Grid Section Component
  *
- * Three-column layout matching screenshot (9.png):
- * - "Our Popular Services" subtitle
- * - "Development & Marketing" heading with red accent
- * - 3 columns: Web Development, Social Media Marketing, App Development
- * - Each column has title, description, outlined "Get Started" button, feature list
- * - Middle column (Marketing) has filled red button, others have outlined
- * - Features with red checkmarks
- *
- * @example
- * ```tsx
- * <ServicesGrid />
- * ```
+ * Fetches services from Sanity CMS API and displays them in a three-column layout.
  */
 export default function ServicesGrid() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const response = await fetch("/api/services");
+        if (!response.ok) throw new Error("Failed to fetch services");
+        const data = await response.json();
+        setServices(data);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchServices();
+  }, []);
+
+  if (loading) {
+    return null; // Or show a loading skeleton
+  }
+
   return (
     <section id="services" className="py-20">
       <div className="container mx-auto px-4">
@@ -40,7 +65,7 @@ export default function ServicesGrid() {
         {/* Services Grid */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {services.map((service, index) => (
-            <ScrollReveal key={service.id} direction="up" delay={index * 0.1}>
+            <ScrollReveal key={service._id} direction="up" delay={index * 0.1}>
               <ServiceColumn service={service} index={index} />
             </ScrollReveal>
           ))}
@@ -54,7 +79,7 @@ export default function ServicesGrid() {
  * Individual Service Column Component
  * Matching screenshot layout - no card borders
  */
-function ServiceColumn({ service, index }: { service: (typeof services)[0]; index: number }) {
+function ServiceColumn({ service, index }: { service: Service; index: number }) {
   // Middle card in each row (index 1 and 4) gets primary filled button
   const isPrimary = index === 1 || index === 4;
 
