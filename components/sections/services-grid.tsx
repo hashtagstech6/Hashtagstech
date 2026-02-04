@@ -55,8 +55,8 @@ export default function ServicesGrid() {
  * Matching screenshot layout - no card borders
  */
 function ServiceColumn({ service, index }: { service: (typeof services)[0]; index: number }) {
-  // Middle card (index 1) gets primary filled button, others get outlined
-  const isPrimary = index === 1;
+  // Middle card in each row (index 1 and 4) gets primary filled button
+  const isPrimary = index === 1 || index === 4;
 
   return (
     <div className="space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">

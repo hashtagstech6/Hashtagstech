@@ -122,18 +122,23 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3">
               {[
-                { name: "Web Development", href: "/services/web-development" },
-                { name: "App Development", href: "/services/app-development" },
-                { name: "AI Integration", href: "/services/ai-solutions" },
-                { name: "Digital Marketing", href: "/services/digital-marketing" },
-                { name: "UI/UX Design", href: "/services/design" },
+                { name: "Web Development", href: "/#services" },
+                { name: "App Development", href: "/#services" },
+                { name: "AI Integration", href: "/#services" },
+                { name: "Digital Marketing", href: "/#services" },
+                { name: "UI/UX Design", href: "/#services" },
               ].map((service) => (
                 <li key={service.name}>
                   <Link
                     href={service.href}
-                    className="text-sm text-white/60 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-200"
+                    className="group flex items-center text-sm text-white/60 hover:text-primary transition-colors duration-300"
                   >
-                    {service.name}
+                    <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300 text-primary mr-0 group-hover:mr-2">
+                       &gt;
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">
+                      {service.name}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -150,9 +155,14 @@ export default function Footer() {
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-sm text-white/60 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-200"
+                    className="group flex items-center text-sm text-white/60 hover:text-primary transition-colors duration-300"
                   >
-                    {link.name}
+                    <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300 text-primary mr-0 group-hover:mr-2">
+                       &gt;
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">
+                      {link.name}
+                    </span>
                   </Link>
                 </li>
               ))}

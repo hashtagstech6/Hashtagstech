@@ -5,8 +5,10 @@
 export type ServiceCategory =
   | "web-development"
   | "app-development"
-  | "social-media-marketing"
-  | "ai-services";
+  | "graphic-design"
+  | "ai-automation"
+  | "digital-marketing"
+  | "cgi-ads";
 
 /**
  * Service interface
@@ -37,7 +39,7 @@ export interface Service {
 /**
  * Sample services data
  *
- * Three main service offerings for Hashtag Tech
+ * Six main service offerings for Hashtag Tech
  */
 export const services: Service[] = [
   {
@@ -78,21 +80,75 @@ export const services: Service[] = [
   },
   {
     id: "3",
-    title: "Social Media Marketing",
-    slug: "social-media-marketing",
-    category: "social-media-marketing",
+    title: "Graphic Designing",
+    slug: "graphic-design",
+    category: "graphic-design",
     shortDescription:
-      "Strategic social media campaigns that drive engagement and growth",
+      "Creative visual solutions that communicate your brand's unique identity effectively",
     features: [
-      "Content Strategy",
-      "Community Management",
-      "Paid Advertising",
-      "Analytics & Reporting",
-      "Influencer Marketing",
+      "Logo & Brand Identity",
+      "UI/UX Design",
+      "Marketing Materials",
+      "Packaging Design",
+      "Custom Illustrations",
     ],
     ctaText: "Get Started",
     ctaStyle: "primary",
     order: 3,
+  },
+  {
+    id: "4",
+    title: "AI Chatbots & Automation",
+    slug: "ai-automation",
+    category: "ai-automation",
+    shortDescription:
+      "Intelligent automation solutions to streamline operations and enhance customer experience",
+    features: [
+      "Custom AI Chatbots",
+      "Workflow Automation",
+      "WhatsApp Business API",
+      "CRM Integration",
+      "AI Agents Setup",
+    ],
+    ctaText: "Get Started",
+    ctaStyle: "secondary",
+    order: 4,
+  },
+  {
+    id: "5",
+    title: "Digital Marketing & SEO",
+    slug: "digital-marketing",
+    category: "digital-marketing",
+    shortDescription:
+      "Data-driven strategies including SEO, social media management, and content repurposing to maximize reach",
+    features: [
+      "Social Media Management",
+      "SEO Optimization",
+      "Content Repurposing",
+      "PPC Campaigns",
+      "Viral Content Strategy",
+    ],
+    ctaText: "Get Started",
+    ctaStyle: "secondary",
+    order: 5,
+  },
+  {
+    id: "6",
+    title: "CGI Ads & VFX",
+    slug: "cgi-ads",
+    category: "cgi-ads",
+    shortDescription:
+      "High-end 3D commercials and visual effects that go viral and capture attention",
+    features: [
+      "3D Product Animation",
+      "VFX for Commercials",
+      "Motion Graphics",
+      "Realistic Rendering",
+      "Viral Social Content",
+    ],
+    ctaText: "Get Started",
+    ctaStyle: "secondary",
+    order: 6,
   },
 ];
 
