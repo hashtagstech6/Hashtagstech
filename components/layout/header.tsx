@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -96,7 +97,7 @@ export default function Header() {
               href="/"
               className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md filter-none drop-shadow-none"
             >
-              <img
+              <Image
                 src="/logo-horizontal.webp"
                 alt="Hashtag Tech Logo"
                 width={150}

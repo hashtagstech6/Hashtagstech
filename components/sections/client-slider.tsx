@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
 import { partners } from "@/data/partners";
 import { cn } from "@/lib/utils";
 
@@ -117,16 +118,20 @@ export default function ClientSlider() {
                   rel="noopener noreferrer"
                   aria-label={`Visit ${partner.name} website`}
                 >
-                  <img
+                  <Image
                     src={partner.logo}
                     alt={`${partner.name} logo`}
+                    width={128}
+                    height={64}
                     className="max-h-full max-w-full object-contain"
                   />
                 </a>
               ) : (
-                <img
+                <Image
                   src={partner.logo}
                   alt={`${partner.name} logo`}
+                  width={128}
+                  height={64}
                   className="max-h-full max-w-full object-contain"
                 />
               )}

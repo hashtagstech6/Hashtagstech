@@ -30,10 +30,10 @@ export default function GlobalPartners() {
         </ScrollReveal>
 
         {/* Partners Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
           {globalPartners.map((partner, index) => (
             <ScrollReveal key={partner.id} direction="up" delay={index * 0.1}>
-              <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted shadow-md">
+              <div className="group relative aspect-[5/6] overflow-hidden rounded-xl bg-muted shadow-md">
                 {/* Background - Country Flag */}
                 <div className="absolute inset-0">
                   <Image

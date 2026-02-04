@@ -74,7 +74,7 @@ export default function AboutUs() {
               <TiltCard>
                 <div className="relative w-full h-full rounded-2xl overflow-hidden bg-muted/30">
                   <Image
-                    src="/placeholder.svg"
+                    src="/images/about-team.png"
                     alt="About Hashtag Tech"
                     fill
                     className="object-contain md:p-8"

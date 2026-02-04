@@ -80,7 +80,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center pt-16 lg:pt-8">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-4 items-center">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-8 items-center">
           {/* Text Content - 50% */}
           <div className="space-y-2">
             {/* Location Badge */}
@@ -122,14 +122,14 @@ export default function Hero() {
           {/* Illustration - 50% */}
           <div
             ref={illustrationRef}
-            className="relative flex justify-center lg:justify-end"
+            className="relative flex justify-center"
             style={{ opacity: prefersReducedMotion ? 1 : 0 }}
           >
-            <div className="relative aspect-square w-full max-w-[600px]">
+            <div className="relative aspect-square w-full max-w-[700px]">
               <TiltCard>
                 <div className="relative w-full h-full">
                   <Image
-                    src="/placeholder.svg"
+                    src="/images/hero-team.png"
                     alt="Hashtag Tech team illustration"
                     fill
                     className="object-contain"

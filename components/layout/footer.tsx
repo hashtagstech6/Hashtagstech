@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 /**
  * Footer Component
@@ -86,9 +87,11 @@ export default function Footer() {
           {/* Column 1: Brand & About */}
           <div className="space-y-6">
             <Link href="/" className="block">
-               <img
+               <Image
                 src="/logo-horizontal.webp"
                 alt="Hashtag Tech"
+                width={120}
+                height={32}
                 className="h-8 w-auto opacity-90"
               />
             </Link>

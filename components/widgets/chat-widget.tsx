@@ -165,15 +165,20 @@ export function ChatWidget({ config = {} }: ChatWidgetProps) {
               </a>
             )}
 
-            {/* Chat Button */}
+            {/* Chat Button with Magnetic Effect */}
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="w-14 h-14 rounded-full bg-primary shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+              className="group w-14 h-14 rounded-full bg-primary-deep shadow-lg flex items-center justify-center hover:scale-110 transition-transform overflow-hidden relative"
               aria-label="Open chat"
               style={{ backgroundColor: fullConfig.primaryColor }}
             >
-              <MessageCircle className="w-6 h-6 text-white" />
+              {/* Magnetic expanding circle */}
+              <span 
+                className="absolute rounded-full top-0 right-0 -translate-y-1/2 translate-x-1/2 w-0 h-0 opacity-0 bg-secondary transition-all duration-700 ease-out group-hover:w-[200px] group-hover:h-[200px] group-hover:opacity-100" 
+                aria-hidden="true" 
+              />
+              <MessageCircle className="w-6 h-6 text-white relative z-10" />
             </button>
           </motion.div>
         )}

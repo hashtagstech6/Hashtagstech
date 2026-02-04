@@ -47,13 +47,13 @@ export default function AIServices() {
         {/* Chess CTA Section - Integrated for consistent spacing */}
         <div className="mt-8">
           <ScrollReveal>
-            <div className="bg-white rounded-lg border border-border/30 shadow-sm p-4 md:p-2">
-              <div className="flex flex-col md:flex-row items-center md:px-2  gap-6 md:gap-10">
+            <div className="bg-white rounded-lg border border-border/30 shadow-sm p-6 md:p-4">
+              <div className="flex flex-col md:flex-row items-center md:px-2 gap-6 md:gap-10 py-2">
                 {/* Left - Chess Knight Image */}
                 <div className="flex-shrink-0">
-                  <div className="w-60 h-60 md:w-24 md:h-24 relative">
+                  <div className="w-60 h-60 md:w-32 md:h-32 relative">
                     <Image
-                      src="/placeholder.svg"
+                      src="/images/chess-knight.png"
                       alt="Chess Knight"
                       fill
                       className="object-cover md:object-contain"

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
@@ -180,7 +181,7 @@ export default function MobileNav({
 
                 {/* Company Info & Socials */}
                 <div className="space-y-6 pt-6 border-t border-border/50">
-                    <img
+                    <Image
                       src="/logo-horizontal.webp"
                       alt="Hashtag Tech Logo"
                       width={120}

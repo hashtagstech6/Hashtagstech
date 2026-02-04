@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import MagneticButton from "@/components/ui/magnetic-button";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,7 @@ export default function SuccessStories() {
 
         {/* Main Content */}
         <div className="relative">
-          {clients.map((client) => (
+          {clients.map((client, index) => (
             <div
               key={client.id}
               ref={(el) => { itemRefs.current[client.id] = el; }}
@@ -101,11 +102,12 @@ export default function SuccessStories() {
                   )}
                   style={{ top: "50%", transform: hoveredClient === client.id ? "translateY(-50%)" : "translateY(-50%) translateX(16px)" }}
                 >
-                  <div className="aspect-video rounded overflow-hidden bg-muted shadow-xl border border-border/20">
-                    <img
-                      src="/placeholder.svg"
+                  <div className="aspect-video rounded overflow-hidden bg-muted shadow-xl border border-border/20 relative">
+                    <Image
+                      src={index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
                       alt={`${client.name} project`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
                 </div>
@@ -118,11 +120,12 @@ export default function SuccessStories() {
                   expandedClient === client.id ? "max-h-48 py-3" : "max-h-0"
                 )}
               >
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src="/placeholder.svg"
+                <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
+                  <Image
+                    src={index === 0 ? "/images/1.png" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
                     alt={`${client.name} project`}
-                    className="w-full h-full object-contain p-3"
+                    fill
+                    className="object-contain p-3"
                   />
                 </div>
               </div>

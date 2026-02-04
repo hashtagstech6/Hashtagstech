@@ -13,15 +13,15 @@ export const globalPartners: GlobalPartner[] = [
     name: "Ahmed Al-Sayed", // Placeholder name
     role: "Partner in Oman",
     country: "Oman",
-    image: "/placeholder.svg", // Replace with actual image
-    flag: "/placeholder.svg", // Replace with actual flag
+    image: "/images/partners/partner-oman.png",
+    flag: "/images/partners/partner-oman.png",
   },
   {
     id: "2",
     name: "Vanessa Corpuz-Baiceanu",
     role: "Partner in Cyprus",
     country: "Cyprus",
-    image: "/placeholder.svg", // Replace with actual image
-    flag: "/placeholder.svg", // Replace with actual flag
+    image: "/images/partners/partner-cyprus.png",
+    flag: "/images/partners/partner-cyprus.png",
   },
 ];

@@ -22,7 +22,7 @@ export default function CeoMessage() {
                      {/* Image Container */}
                     <div className="relative w-full h-full rounded overflow-hidden bg-muted">
                         <Image
-                            src="/placeholder.svg"
+                            src="/images/ceo-portrait.png"
                             alt="Zain Ul Abideen Baloch - CEO"
                             fill
                             className="object-cover object-top"
