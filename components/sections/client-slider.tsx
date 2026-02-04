@@ -2,37 +2,55 @@
 
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { partners } from "@/data/partners";
 import { cn } from "@/lib/utils";
 
 /**
- * Partners Section Component
+ * Client Slider Component
  *
  * Displays partner/client logos in a continuous marquee animation.
+ * Fetches partners from Sanity CMS API.
  * Features infinite scrolling with GSAP.
- *
- * Features:
- * - Infinite horizontal marquee animation
- * - Logo grid with hover effects
- * - Responsive design
- * - Pause animation on hover
- *
- * @example
- * ```tsx
- * <Partners />
- * ```
  */
+
+interface Partner {
+  _id: string;
+  name: string;
+  logo: {
+    asset?: { url?: string };
+    alt?: string;
+  };
+  website?: string;
+  country?: string;
+  partnerType?: string;
+  description?: string;
+  isActive: boolean;
+}
 
 export default function ClientSlider() {
   const sectionRef = useRef<HTMLElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [partners, setPartners] = useState<Partner[]>([]);
 
   const animationRef = useRef<Animation | undefined>(undefined);
 
   useEffect(() => {
+    async function fetchPartners() {
+      try {
+        const response = await fetch("/api/global-partners?partnerType=client");
+        if (!response.ok) throw new Error("Failed to fetch partners");
+        const data = await response.json();
+        setPartners(data);
+      } catch (error) {
+        console.error("Error fetching partners:", error);
+      }
+    }
+    fetchPartners();
+  }, []);
+
+  useEffect(() => {
     // Create animation once
-    if (marqueeRef.current) {
+    if (marqueeRef.current && partners.length > 0) {
       animationRef.current = marqueeRef.current.animate(
         [
           { transform: "translateX(0)" },
@@ -49,7 +67,7 @@ export default function ClientSlider() {
     return () => {
       animationRef.current?.cancel();
     };
-  }, []);
+  }, [partners.length]);
 
   // Control playback based on hover state
   useEffect(() => {
@@ -61,7 +79,19 @@ export default function ClientSlider() {
   }, [isPaused]);
 
   // Duplicate partners array for seamless infinite scroll
-  const duplicatedPartners = [...partners, ...partners, ...partners];
+  const duplicatedPartners = partners.length > 0 ? [...partners, ...partners, ...partners] : [];
+
+  // Map partner data to component format
+  const displayPartners = duplicatedPartners.map(partner => ({
+    id: partner._id,
+    name: partner.name,
+    logo: partner.logo?.asset?.url || "/placeholder.svg",
+    website: partner.website,
+  }));
+
+  if (partners.length === 0) {
+    return null; // Or show a loading skeleton
+  }
 
   return (
     <section
@@ -101,7 +131,7 @@ export default function ClientSlider() {
           className="flex items-center space-x-12 whitespace-nowrap"
           style={{ width: "fit-content" }}
         >
-          {duplicatedPartners.map((partner, index) => (
+          {displayPartners.map((partner, index) => (
             <div
               key={`${partner.id}-${index}`}
               className={cn(

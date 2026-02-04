@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
-import { testimonials } from "@/data/testimonials";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Testimonials Section Component
  *
+ * Fetches testimonials from Sanity CMS API.
  * Single-column centered layout matching screenshot reference (5.png):
  * - Dark background (section-testimonials class)
  * - "Hear from Our Clients" heading with red accent
@@ -18,12 +18,21 @@ import { motion, AnimatePresence } from "framer-motion";
  * - 5-star rating, quote, client avatar & info
  * - Left/right navigation arrows
  * - Carousel navigation for cycling through testimonials
- *
- * @example
- * ```tsx
- * <Testimonials />
- * ```
  */
+
+interface Client {
+  _id: string;
+  name: string;
+  company: string;
+  role?: string;
+  photo?: {
+    asset?: { url?: string };
+    alt?: string;
+  };
+  rating: number;
+  quote: string;
+  project?: string;
+}
 
 /**
  * Render star rating
@@ -49,9 +58,34 @@ export default function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [testimonials, setTestimonials] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTestimonials() {
+      try {
+        const response = await fetch("/api/clients?featured=true");
+        if (!response.ok) throw new Error("Failed to fetch testimonials");
+        const data = await response.json();
+        setTestimonials(data);
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTestimonials();
+  }, []);
 
   // Get current testimonial
-  const currentTestimonial = testimonials[currentIndex] ?? testimonials[0]!;
+  const currentTestimonial = testimonials[currentIndex] ?? testimonials[0] ?? {
+    _id: "1",
+    name: "Sarah Johnson",
+    company: "Procope AI",
+    role: "CTO",
+    rating: 5,
+    quote: "Hashtag Tech delivered exceptional AI solutions that transformed our business operations.",
+  };
 
   // Variants for sliding animation
   const variants = {
@@ -73,11 +107,13 @@ export default function Testimonials() {
 
   // Carousel navigation
   const nextTestimonial = () => {
+    if (testimonials.length === 0) return;
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevTestimonial = () => {
+    if (testimonials.length === 0) return;
     setDirection(-1);
     setCurrentIndex(
       (prev) => (prev - 1 + testimonials.length) % testimonials.length
@@ -87,6 +123,20 @@ export default function Testimonials() {
   const swipeConfidenceThreshold = 10000;
   const swipePower = (offset: number, velocity: number) => {
     return Math.abs(offset) * velocity;
+  };
+
+  if (loading) {
+    return null; // Or show a loading skeleton
+  }
+
+  // Map client data to testimonial format
+  const displayTestimonial = {
+    image: currentTestimonial.photo?.asset?.url || "/placeholder.svg",
+    clientName: currentTestimonial.name,
+    clientTitle: currentTestimonial.role || "",
+    clientCompany: currentTestimonial.company,
+    rating: currentTestimonial.rating,
+    quote: currentTestimonial.quote,
   };
 
   return (
@@ -152,8 +202,8 @@ export default function Testimonials() {
                 <div className="flex-shrink-0 select-none">
                   <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
                     <Image
-                      src={currentTestimonial.image}
-                      alt={currentTestimonial.clientName}
+                      src={displayTestimonial.image}
+                      alt={displayTestimonial.clientName}
                       fill
                       className="object-cover"
                       draggable={false}
@@ -165,24 +215,24 @@ export default function Testimonials() {
                 <div className="flex-1 text-center md:text-left select-none">
                   {/* Star Rating */}
                   <div className="flex justify-center md:justify-start mb-6">
-                    <StarRating rating={currentTestimonial.rating} />
+                    <StarRating rating={displayTestimonial.rating} />
                   </div>
 
                   {/* Quote */}
                   <blockquote className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed mb-8">
-                    "{currentTestimonial.quote}"
+                    "{displayTestimonial.quote}"
                   </blockquote>
 
                   {/* Client Info */}
                   <div>
                     <h3 className="text-xl font-bold text-white mb-1">
-                      {currentTestimonial.clientName}
+                      {displayTestimonial.clientName}
                     </h3>
                     <p className="text-sm text-white/60 font-medium">
-                      {currentTestimonial.clientTitle}
-                      {currentTestimonial.clientCompany && (
+                      {displayTestimonial.clientTitle}
+                      {displayTestimonial.clientCompany && (
                         <span className="opacity-70">
-                          , {currentTestimonial.clientCompany}
+                          , {displayTestimonial.clientCompany}
                         </span>
                       )}
                     </p>

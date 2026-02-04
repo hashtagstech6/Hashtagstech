@@ -16,14 +16,14 @@ export default function CeoMessage() {
           {/* Left Column: Image with Tilt Effect */}
           <div className="w-full lg:w-1/2 flex justify-center lg:justify-end perspective-1000">
             <ScrollReveal direction="right">
-              <div className="relative w-[350px] h-[400px] md:w-[400px] md:h-[500px] lg:w-[450px] lg:h-[550px]">
+              <div className="relative w-[350px] h-[450px] md:w-[400px] md:h-[500px] lg:w-[450px] lg:h-[550px]">
                 <TiltCard>
                   <div className="relative w-full h-full rounded overflow-visible shadow-lg">
                      {/* Image Container */}
                     <div className="relative w-full h-full rounded overflow-hidden bg-muted">
                         <Image
                             src="/images/ceo-portrait.png"
-                            alt="Zain Ul Abideen Baloch - CEO"
+                            alt="Kamran Khan - CEO"
                             fill
                             className="object-cover object-top"
                             priority
@@ -45,7 +45,7 @@ export default function CeoMessage() {
                         Message From The CEO
                         </p>
                         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground tracking-tight mb-6">
-                        Zain Ul Abideen Baloch
+                        Kamran Khan
                         </h2>
                     </div>
 

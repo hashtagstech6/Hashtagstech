@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import MagneticButton from "@/components/ui/magnetic-button";
@@ -9,45 +9,71 @@ import { cn } from "@/lib/utils";
 /**
  * Success Stories Section Component
  *
- * Hover reveals image next to the heading
+ * Fetches success stories from Sanity CMS API.
+ * Hover reveals image next to the heading.
  */
 
-const clients = [
-  {
-    id: "1",
-    name: "Procope AI",
-    country: "US",
-    description: "AI-powered enterprise solutions",
-  },
-  {
-    id: "2",
-    name: "Finaxe",
-    country: "GB",
-    description: "People Are The Solution",
-  },
-  {
-    id: "3",
-    name: "Shift- Application",
-    country: "OM",
-    description: "Workforce management platform",
-  },
-  {
-    id: "4",
-    name: "Refurbly- Vodafone",
-    country: "QA",
-    description: "Sustainable tech marketplace",
-  },
-];
+interface SuccessStory {
+  _id: string;
+  title: string;
+  slug: string;
+  clientName: string;
+  clientCompany: string;
+  country?: string;
+  industry?: string;
+  featuredImage?: {
+    asset?: { url?: string };
+    alt?: string;
+  };
+  excerpt?: string;
+  challenge?: string;
+  solution?: string;
+  results?: Array<{ metric: string; label: string }>;
+  featured?: boolean;
+  order?: number;
+}
 
 export default function SuccessStories() {
   const sectionRef = useRef<HTMLElement>(null);
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
+  const [stories, setStories] = useState<SuccessStory[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  useEffect(() => {
+    async function fetchStories() {
+      try {
+        const response = await fetch("/api/success-stories?featured=true");
+        if (!response.ok) throw new Error("Failed to fetch success stories");
+        const data = await response.json();
+        setStories(data);
+      } catch (error) {
+        console.error("Error fetching success stories:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStories();
+  }, []);
 
   const toggleMobile = (id: string) => {
     setExpandedClient(expandedClient === id ? null : id);
   };
+
+  if (loading) {
+    return null; // Or show a loading skeleton
+  }
+
+  // Map success stories to client format for display
+  const clients = stories.map(story => ({
+    id: story._id,
+    name: story.clientCompany,
+    country: story.country || "Global",
+    description: story.excerpt || "",
+    imageUrl: story.featuredImage?.asset?.url || "/placeholder.svg",
+    alt: story.featuredImage?.alt || `${story.clientCompany} project`,
+  }));
 
   return (
     <section
@@ -85,27 +111,27 @@ export default function SuccessStories() {
                 </h3>
 
                 {/* Mobile expand icon */}
-                <ChevronDown 
+                <ChevronDown
                   className={cn(
                     "w-5 h-5 text-muted-foreground lg:hidden transition-transform",
                     expandedClient === client.id && "rotate-180"
-                  )} 
+                  )}
                 />
 
                 {/* Desktop floating image - appears on hover */}
                 <div
                   className={cn(
                     "hidden lg:block absolute left-[50%] z-50 w-[480px] transition-all duration-200",
-                    hoveredClient === client.id 
-                      ? "opacity-100 translate-x-0" 
+                    hoveredClient === client.id
+                      ? "opacity-100 translate-x-0"
                       : "opacity-0 translate-x-4 pointer-events-none"
                   )}
                   style={{ top: "50%", transform: hoveredClient === client.id ? "translateY(-50%)" : "translateY(-50%) translateX(16px)" }}
                 >
                   <div className="aspect-video rounded overflow-hidden bg-muted shadow-xl border border-border/20 relative">
                     <Image
-                      src={index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
-                      alt={`${client.name} project`}
+                      src={client.imageUrl || (index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg"))}
+                      alt={client.alt}
                       fill
                       className="object-cover"
                     />
@@ -122,8 +148,8 @@ export default function SuccessStories() {
               >
                 <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
                   <Image
-                    src={index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg")}
-                    alt={`${client.name} project`}
+                    src={client.imageUrl || (index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg"))}
+                    alt={client.alt}
                     fill
                     className="object-cover"
                   />
