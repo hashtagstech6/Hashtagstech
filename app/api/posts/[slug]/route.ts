@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { client } from "@/sanity/lib/client";
+import { getClient } from "@/sanity/lib/client";
 import { validateSanityConfig } from "@/sanity/env";
 
 /**
@@ -45,6 +45,14 @@ export async function GET(
   if (!config.valid) {
     return NextResponse.json(
       { error: config.error || "Sanity configuration error" },
+      { status: 500 }
+    );
+  }
+
+  const client = getClient();
+  if (!client) {
+    return NextResponse.json(
+      { error: "Sanity client not configured" },
       { status: 500 }
     );
   }

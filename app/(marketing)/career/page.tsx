@@ -111,10 +111,34 @@ export default async function CareerPage() {
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
             {careers.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">
-                  No open positions at the moment. Please check back soon!
+              <div className="text-center py-16 max-w-md mx-auto">
+                {/* Animated Briefcase Icon */}
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                  {/* Decorative circles */}
+                  <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+                  <div className="absolute inset-2 bg-primary/10 rounded-full" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Briefcase className="w-10 h-10 text-primary" />
+                  </div>
+                </div>
+                
+                {/* Headline */}
+                <h3 className="text-2xl font-bold text-foreground mb-3">
+                  No Open Positions
+                </h3>
+                
+                {/* Description */}
+                <p className="text-muted-foreground text-lg mb-6">
+                  We don&apos;t have any openings at the moment, but we&apos;re always growing. Check back soon for new opportunities!
                 </p>
+                
+                {/* CTA suggestion */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full text-sm text-muted-foreground">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  Follow us on social media for updates
+                </div>
               </div>
             ) : (
               <div className="max-w-4xl mx-auto space-y-6">

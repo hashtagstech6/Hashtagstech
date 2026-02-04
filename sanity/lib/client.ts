@@ -5,34 +5,66 @@
  * Uses Stega for visual editing in development.
  */
 
-import { createClient } from "next-sanity";
-import { apiVersion, dataset, projectId } from "../env";
+import { createClient, SanityClient } from "next-sanity";
+import { apiVersion, dataset, projectId, validateSanityConfig } from "../env";
+
+// Lazy-loaded client instance
+let _client: SanityClient | null = null;
 
 /**
- * Sanity client for fetching content
- *
- * Configuration:
- * - projectId: Sanity project ID from environment
- * - dataset: Content dataset (default: "production")
- * - apiVersion: API version to use
- * - useCdn: false (disabled for ISR - ensures fresh content)
- * - stega: enabled for visual editing in development
+ * Get Sanity client (lazy-loaded)
+ * 
+ * This function creates the client on first use rather than at module load,
+ * which prevents build errors when Sanity is not configured.
+ * 
+ * @returns Sanity client or null if not configured
  */
-export const client = createClient({
+export function getClient(): SanityClient | null {
+  const config = validateSanityConfig();
+  if (!config.valid) {
+    return null;
+  }
+
+  if (!_client) {
+    _client = createClient({
+      projectId,
+      dataset,
+      apiVersion,
+      useCdn: false, // Disable CDN for ISR to ensure fresh content
+      stega: {
+        enabled: process.env.NODE_ENV === "development",
+        studioUrl: "/studio",
+        filter: (props) => {
+          // Disable Stega for URLs to prevent hydration issues
+          if (props.sourcePath.at(-1) === "url") return false;
+          return props.filterDefault(props);
+        },
+      },
+    });
+  }
+
+  return _client;
+}
+
+/**
+ * Legacy client export for backward compatibility
+ * WARNING: This may fail at build time if Sanity is not configured.
+ * Prefer using getClient() instead for safer access.
+ */
+export const client = projectId ? createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: false, // Disable CDN for ISR to ensure fresh content
+  useCdn: false,
   stega: {
     enabled: process.env.NODE_ENV === "development",
     studioUrl: "/studio",
     filter: (props) => {
-      // Disable Stega for URLs to prevent hydration issues
       if (props.sourcePath.at(-1) === "url") return false;
       return props.filterDefault(props);
     },
   },
-});
+}) : null as unknown as SanityClient;
 
 /**
  * Fetch content with GROQ query
@@ -45,8 +77,14 @@ export async function fetchSanity<T>(
   query: string,
   params?: Record<string, unknown>
 ): Promise<T> {
-  if (params && Object.keys(params).length > 0) {
-    return client.fetch<T>(query, params);
+  const sanityClient = getClient();
+  if (!sanityClient) {
+    throw new Error("Sanity client is not configured");
   }
-  return client.fetch<T>(query);
+  
+  if (params && Object.keys(params).length > 0) {
+    return sanityClient.fetch<T>(query, params);
+  }
+  return sanityClient.fetch<T>(query);
 }
+
