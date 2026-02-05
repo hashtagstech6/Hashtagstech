@@ -74,7 +74,7 @@ const MagneticButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonP
       "w-0 h-0 opacity-0",
       "bg-foreground",
       "transition-all duration-700 ease-out",
-      "group-hover:w-[1000px] group-hover:h-[1000px] group-hover:opacity-100"
+      "group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100"
     );
 
     const content = (
