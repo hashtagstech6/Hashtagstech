@@ -20,9 +20,11 @@ interface Partner {
     alt?: string;
   };
   website?: string;
-  country?: string;
-  partnerType?: string;
+  logoType?: string;
+  industry?: string;
   description?: string;
+  featured?: boolean;
+  order?: number;
   isActive: boolean;
 }
 
@@ -37,7 +39,7 @@ export default function ClientSlider() {
   useEffect(() => {
     async function fetchPartners() {
       try {
-        const response = await fetch("/api/global-partners?partnerType=client");
+        const response = await fetch("/api/partner-logos?logoType=client");
         if (!response.ok) throw new Error("Failed to fetch partners");
         const data = await response.json();
         setPartners(data);
@@ -48,16 +50,24 @@ export default function ClientSlider() {
     fetchPartners();
   }, []);
 
+  // Create a base set that is definitely wide enough (e.g., repeat at least 6 times or up to 30 items) 
+  // Then duplicate THAT set to ensure perfect 50% loop
+  const baseRepetitions = Math.max(4, Math.ceil(30 / (partners.length || 1)));
+  const baseContent = Array(baseRepetitions).fill(partners).flat();
+  const duplicatedPartners = [...baseContent, ...baseContent];
+
   useEffect(() => {
     // Create animation once
     if (marqueeRef.current && partners.length > 0) {
+      const duration = duplicatedPartners.length * 2000; // 2 seconds per item
+      
       animationRef.current = marqueeRef.current.animate(
         [
           { transform: "translateX(0)" },
           { transform: "translateX(-50%)" },
         ],
         {
-          duration: 30000,
+          duration: duration,
           iterations: Infinity,
           easing: "linear",
         }
@@ -67,7 +77,7 @@ export default function ClientSlider() {
     return () => {
       animationRef.current?.cancel();
     };
-  }, [partners.length]);
+  }, [partners.length, duplicatedPartners.length]); // Updated dependency
 
   // Control playback based on hover state
   useEffect(() => {
@@ -77,9 +87,6 @@ export default function ClientSlider() {
       animationRef.current?.play();
     }
   }, [isPaused]);
-
-  // Duplicate partners array for seamless infinite scroll
-  const duplicatedPartners = partners.length > 0 ? [...partners, ...partners, ...partners] : [];
 
   // Map partner data to component format
   const displayPartners = duplicatedPartners.map(partner => ({
@@ -138,7 +145,7 @@ export default function ClientSlider() {
                 "flex-shrink-0 flex items-center justify-center",
                 "grayscale opacity-60 hover:grayscale-0 hover:opacity-100",
                 "transition-all duration-300",
-                "h-16 w-32"
+                "h-26 w-52"
               )}
             >
               {partner.website ? (
@@ -151,8 +158,8 @@ export default function ClientSlider() {
                   <Image
                     src={partner.logo}
                     alt={`${partner.name} logo`}
-                    width={128}
-                    height={64}
+                    width={192}
+                    height={96}
                     className="max-h-full max-w-full object-contain"
                   />
                 </a>
@@ -160,8 +167,8 @@ export default function ClientSlider() {
                 <Image
                   src={partner.logo}
                   alt={`${partner.name} logo`}
-                  width={128}
-                  height={64}
+                  width={192}
+                  height={96}
                   className="max-h-full max-w-full object-contain"
                 />
               )}

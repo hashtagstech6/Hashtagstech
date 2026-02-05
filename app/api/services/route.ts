@@ -31,6 +31,8 @@ import { validateSanityConfig } from "@/sanity/env";
  * ]
  * ```
  */
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   // Validate Sanity configuration
   const config = validateSanityConfig();
@@ -62,16 +64,17 @@ export async function GET(request: Request) {
         ctaStyle,
         order,
         icon,
-        featured,
         isActive
       }
     `;
 
-    const services = await client.fetch(query);
+    const services = await client.fetch(query, {}, { useCdn: false });
 
     return NextResponse.json(services, {
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
       },
     });
   } catch (error) {

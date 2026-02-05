@@ -1,13 +1,8 @@
 /**
- * AI Service Schema
+ * AI Service Schema (Simplified)
  *
- * Sanity schema for AI services with:
- * - Title and slug
- * - Number badge (01, 02, 03, etc.)
- * - Short description
- * - Feature list
- * - Display order
- * - Active flag
+ * Sanity schema for AI services.
+ * Only contains fields that are actually used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -19,14 +14,14 @@ export const aiServiceType = defineType({
   type: "document",
   icon: DocumentIcon,
   fields: [
-    // Title - required for display
+    // Title
     defineField({
       name: "title",
       type: "string",
       validation: (Rule) => Rule.required().error("Title is required"),
     }),
 
-    // Slug - auto-generated from title
+    // Slug
     defineField({
       name: "slug",
       type: "slug",
@@ -34,7 +29,7 @@ export const aiServiceType = defineType({
       validation: (Rule) => Rule.required().error("Slug is required"),
     }),
 
-    // Number badge - for display (01, 02, 03, etc.)
+    // Number badge
     defineField({
       name: "number",
       type: "string",
@@ -45,7 +40,7 @@ export const aiServiceType = defineType({
           .error("Number must be 2 digits (e.g., '01', '02')"),
     }),
 
-    // Short description - for cards
+    // Short description
     defineField({
       name: "shortDescription",
       type: "text",
@@ -57,7 +52,7 @@ export const aiServiceType = defineType({
           .error("Short description must be between 50 and 200 characters"),
     }),
 
-    // Features - bullet points for AI service details
+    // Features
     defineField({
       name: "features",
       type: "array",
@@ -68,7 +63,7 @@ export const aiServiceType = defineType({
           .error("At least 3 features are required"),
     }),
 
-    // Display order - for sorting
+    // Display order
     defineField({
       name: "order",
       type: "number",
@@ -76,18 +71,18 @@ export const aiServiceType = defineType({
       validation: (Rule) => Rule.required().min(0).error("Order must be a positive number"),
     }),
 
-    // Active flag - hide inactive services
-    defineField({
-      name: "isActive",
-      type: "boolean",
-      initialValue: true,
-    }),
-
-    // Icon - optional AI service icon
+    // Icon
     defineField({
       name: "icon",
       type: "string",
       description: "Lucide icon name (e.g., 'Bot', 'Brain', 'Cpu')",
+    }),
+
+    // Active flag
+    defineField({
+      name: "isActive",
+      type: "boolean",
+      initialValue: true,
     }),
   ],
 

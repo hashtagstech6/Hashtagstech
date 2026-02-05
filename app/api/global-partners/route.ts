@@ -5,16 +5,13 @@ import { validateSanityConfig } from "@/sanity/env";
 /**
  * GET /api/global-partners
  *
- * Fetch all global partners with ISR caching.
+ * Fetch all global partners (representatives) with ISR caching (Simplified).
  *
  * Query Parameters:
  * - limit: number of partners to return (optional, default: 50)
- * - country: filter by country code (optional: US, GB, AE, etc.)
- * - partnerType: filter by partner type (optional: technology, strategic, client, investor)
  *
  * Caching:
  * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
- * - stale-while-revalidate: 7200 seconds
  */
 export async function GET(request: Request) {
   const config = validateSanityConfig();
@@ -36,42 +33,23 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 50;
-    const country = searchParams.get("country");
-    const partnerType = searchParams.get("partnerType");
-
-    let filters = "&& isActive == true";
-    if (country) {
-      filters += ` && country == $country`;
-    }
-    if (partnerType) {
-      filters += ` && partnerType == $partnerType`;
-    }
 
     const query = `
-      *[_type == "globalPartner"${filters}] | order(order asc)[0...${limit}] {
+      *[_type == "globalPartner" && isActive == true] | order(order asc)[0...${limit}] {
         _id,
         name,
-        "slug": slug.current,
-        logo {
+        country,
+        photo {
           asset-> {
             _id,
             url
           },
           alt
-        },
-        website,
-        country,
-        partnerType,
-        description,
-        order
+        }
       }
     `;
 
-    const params: Record<string, string> = {};
-    if (country) params.country = country;
-    if (partnerType) params.partnerType = partnerType;
-
-    const partners = await client.fetch(query, Object.keys(params).length > 0 ? params : undefined);
+    const partners = await client.fetch(query);
 
     return NextResponse.json(partners, {
       headers: {

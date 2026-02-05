@@ -5,16 +5,14 @@ import { validateSanityConfig } from "@/sanity/env";
 /**
  * GET /api/clients
  *
- * Fetch all client testimonials with ISR caching.
+ * Fetch all client testimonials with ISR caching (Simplified).
  *
  * Query Parameters:
  * - limit: number of testimonials to return (optional, default: 10)
- * - featured: filter for featured testimonials only (optional: true/false)
- * - industry: filter by industry (optional)
+ * - featured: filter for featured testimonials only (optional: true)
  *
  * Caching:
  * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
- * - stale-while-revalidate: 7200 seconds
  */
 export async function GET(request: Request) {
   const config = validateSanityConfig();
@@ -35,23 +33,23 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Number(searchParams.get("limit")) || 10;
+    const limit = Number(searchParams.get("limit")) || 0; // Default to 0 (no limit)
     const featured = searchParams.get("featured");
-    const industry = searchParams.get("industry");
-
     let filters = "&& isActive == true";
     if (featured === "true") {
       filters += ` && featured == true`;
     }
-    if (industry) {
-      filters += ` && industry == $industry`;
+
+    // Construct query with optional limit
+    let query = `*[_type == "client"${filters}] | order(order asc)`;
+    
+    if (limit > 0) {
+      query += `[0...${limit}]`;
     }
 
-    const query = `
-      *[_type == "client"${filters}] | order(order asc)[0...${limit}] {
+    query += ` {
         _id,
         name,
-        "slug": slug.current,
         company,
         role,
         photo {
@@ -63,18 +61,10 @@ export async function GET(request: Request) {
         },
         rating,
         quote,
-        project,
-        industry,
-        featured,
-        "caseStudy": caseStudy-> {
-          _id,
-          "slug": slug.current
-        }
-      }
-    `;
+        project
+      }`;
 
-    const params = industry ? { industry } : undefined;
-    const clients = await client.fetch(query, params);
+    const clients = await client.fetch(query);
 
     return NextResponse.json(clients, {
       headers: {

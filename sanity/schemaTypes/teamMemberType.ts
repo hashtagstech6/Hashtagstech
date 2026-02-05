@@ -1,12 +1,8 @@
 /**
- * Team Member Schema
+ * Team Member Schema (Simplified)
  *
- * Sanity schema for team members with:
- * - Name and role
- * - Photo
- * - Bio
- * - Social links
- * - Department
+ * Sanity schema for team members.
+ * Only contains fields that are actually used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -18,19 +14,11 @@ export const teamMemberType = defineType({
   type: "document",
   icon: DocumentIcon,
   fields: [
-    // Name - required for display
+    // Name
     defineField({
       name: "name",
       type: "string",
       validation: (Rule) => Rule.required().error("Name is required"),
-    }),
-
-    // Slug - auto-generated from name
-    defineField({
-      name: "slug",
-      type: "slug",
-      options: { source: "name" },
-      validation: (Rule) => Rule.required().error("Slug is required"),
     }),
 
     // Role/Title
@@ -69,24 +57,7 @@ export const teamMemberType = defineType({
           validation: (Rule) => Rule.required().error("Alt text is required for accessibility"),
         },
       ],
-    }),
-
-    // Short Bio - for team page
-    defineField({
-      name: "bio",
-      type: "text",
-      rows: 5,
-      validation: (Rule) =>
-        Rule.required()
-          .min(50)
-          .error("Bio must be at least 50 characters"),
-    }),
-
-    // Full Bio - for individual profile page
-    defineField({
-      name: "fullBio",
-      type: "array",
-      of: [{ type: "block" }],
+      validation: (Rule) => Rule.required().error("Photo is required"),
     }),
 
     // Skills/Expertise
@@ -96,38 +67,7 @@ export const teamMemberType = defineType({
       of: [{ type: "string" }],
     }),
 
-    // Email
-    defineField({
-      name: "email",
-      type: "email",
-    }),
-
-    // LinkedIn URL
-    defineField({
-      name: "linkedinUrl",
-      type: "url",
-    }),
-
-    // Twitter/X URL
-    defineField({
-      name: "twitterUrl",
-      type: "url",
-    }),
-
-    // GitHub URL (for developers)
-    defineField({
-      name: "githubUrl",
-      type: "url",
-    }),
-
-    // Featured flag for leadership/highlighted members
-    defineField({
-      name: "featured",
-      type: "boolean",
-      initialValue: false,
-    }),
-
-    // Active flag - hide former employees
+    // Active flag
     defineField({
       name: "isActive",
       type: "boolean",

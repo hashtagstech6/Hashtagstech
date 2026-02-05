@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { getActiveCareers } from "@/data/careers";
 import Header from "@/components/layout/header";
 import PageHeader from "@/components/layout/page-header";
 import { formatDate } from "@/lib/utils";
@@ -54,36 +53,34 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 300;
 
 /**
- * Fetch careers from Sanity API or fall back to hardcoded data
+ * Fetch careers from Sanity API
  */
-async function fetchCareers(): Promise<Array<SanityCareer | ReturnType<typeof getActiveCareers>[number]>> {
+async function fetchCareers(): Promise<SanityCareer[]> {
   const config = validateSanityConfig();
 
-  // Use Sanity if configured, otherwise fall back to hardcoded data
-  if (config.valid) {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
-        next: { revalidate: 300 },
-      });
-
-      if (response.ok) {
-        const careers = await response.json();
-        return careers;
-      }
-    } catch (error) {
-      console.error("Failed to fetch from Sanity API, falling back to hardcoded data:", error);
-    }
+  if (!config.valid) {
+    return [];
   }
 
-  // Fall back to hardcoded data
-  return getActiveCareers();
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
+      next: { revalidate: 300 },
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Failed to fetch from Sanity API:", error);
+  }
+
+  return [];
 }
 
 /**
  * Career Listing Page Component
  *
  * Displays all active job openings with titles, locations, and types.
- * Supports both Sanity CMS and hardcoded data.
  * T089 [US6] Verify career listing shows only active job openings
  *
  * @example
@@ -93,6 +90,10 @@ async function fetchCareers(): Promise<Array<SanityCareer | ReturnType<typeof ge
  */
 export default async function CareerPage() {
   const careers = await fetchCareers();
+
+  if (careers.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -110,66 +111,11 @@ export default async function CareerPage() {
         {/* Job Listings */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            {careers.length === 0 ? (
-              <div className="text-center py-16 max-w-md mx-auto">
-                {/* Animated Briefcase Icon */}
-                <div className="relative w-24 h-24 mx-auto mb-6">
-                  {/* Decorative circles */}
-                  <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
-                  <div className="absolute inset-2 bg-primary/10 rounded-full" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Briefcase className="w-10 h-10 text-primary" />
-                  </div>
-                </div>
-                
-                {/* Headline */}
-                <h3 className="text-2xl font-bold text-foreground mb-3">
-                  No Open Positions
-                </h3>
-                
-                {/* Description */}
-                <p className="text-muted-foreground text-lg mb-6">
-                  We don&apos;t have any openings at the moment, but we&apos;re always growing. Check back soon for new opportunities!
-                </p>
-                
-                {/* CTA suggestion */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full text-sm text-muted-foreground">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  Follow us on social media for updates
-                </div>
-              </div>
-            ) : (
-              <div className="max-w-4xl mx-auto space-y-6">
-                {careers.map((career) => {
-                  // Handle both Sanity and hardcoded data formats
-                  // Check for 'id' which only exists in hardcoded Career type
-                  if ("id" in career) {
-                    // Hardcoded data format
-                    return <CareerCard key={career.id} career={career} />;
-                  } else {
-                    // Sanity data format - convert to CareerCard format
-                    const sanityCareer = career as SanityCareer;
-                    const adaptedCareer = {
-                      id: sanityCareer._id,
-                      title: sanityCareer.title,
-                      slug: sanityCareer.slug,
-                      department: sanityCareer.department,
-                      location: sanityCareer.location,
-                      type: sanityCareer.type,
-                      description: "",
-                      requirements: sanityCareer.requirements,
-                      benefits: sanityCareer.benefits,
-                      isActive: sanityCareer.isActive,
-                      publishedAt: sanityCareer.publishedAt,
-                      salary: sanityCareer.salary,
-                    };
-                    return <CareerCard key={sanityCareer._id} career={adaptedCareer} />;
-                  }
-                })}
-              </div>
-            )}
+            <div className="max-w-4xl mx-auto space-y-6">
+              {careers.map((career) => (
+                <CareerCard key={career._id} career={career} />
+              ))}
+            </div>
           </div>
         </section>
 
@@ -259,7 +205,7 @@ export default async function CareerPage() {
 /**
  * Career Card Component
  */
-function CareerCard({ career }: { career: ReturnType<typeof getActiveCareers>[number] | { id: string; title: string; slug: string; department: string; location: string; type: "Full-time" | "Part-time" | "Contract" | "Remote"; description: string; requirements: string[]; benefits: string[]; isActive: boolean; publishedAt: string; salary?: { min?: number; max?: number; currency?: string } } }) {
+function CareerCard({ career }: { career: SanityCareer }) {
   return (
     <Link
       href={`/career/${career.slug}`}

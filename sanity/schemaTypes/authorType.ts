@@ -1,8 +1,8 @@
 /**
- * Author Schema
+ * Author Schema (Simplified)
  *
  * Sanity schema for blog post authors.
- * Each author has a name, photo, bio, and slug for profile pages.
+ * Only contains fields that are actually fetched and used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -14,14 +14,14 @@ export const authorType = defineType({
   type: "document",
   icon: UserIcon,
   fields: [
-    // Name - required
+    // Name
     defineField({
       name: "name",
       type: "string",
       validation: (Rule) => Rule.required().error("Author name is required"),
     }),
 
-    // Slug - auto-generated from name
+    // Slug
     defineField({
       name: "slug",
       type: "slug",
@@ -43,9 +43,10 @@ export const authorType = defineType({
             Rule.required().error("Alt text is required for accessibility"),
         },
       ],
+      validation: (Rule) => Rule.required().error("Author image is required"),
     }),
 
-    // Bio - short biography
+    // Bio
     defineField({
       name: "bio",
       type: "text",
@@ -57,31 +58,6 @@ export const authorType = defineType({
     defineField({
       name: "jobTitle",
       type: "string",
-    }),
-
-    // Email (optional)
-    defineField({
-      name: "email",
-      type: "email",
-    }),
-
-    // Twitter/X handle
-    defineField({
-      name: "twitter",
-      type: "string",
-      description: "Twitter/X username (without @)",
-    }),
-
-    // LinkedIn URL
-    defineField({
-      name: "linkedin",
-      type: "url",
-    }),
-
-    // GitHub URL
-    defineField({
-      name: "github",
-      type: "url",
     }),
   ],
 

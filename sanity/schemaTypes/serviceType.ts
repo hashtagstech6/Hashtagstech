@@ -1,13 +1,8 @@
 /**
- * Service Schema
+ * Service Schema (Simplified)
  *
- * Sanity schema for services with:
- * - Title and slug
- * - Short description
- * - Category (web-development, app-development, social-media-marketing, ai-services)
- * - Feature list
- * - CTA text and style
- * - Display order
+ * Sanity schema for services.
+ * Only contains fields that are actually used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -19,14 +14,14 @@ export const serviceType = defineType({
   type: "document",
   icon: DocumentIcon,
   fields: [
-    // Title - required for display
+    // Title
     defineField({
       name: "title",
       type: "string",
       validation: (Rule) => Rule.required().error("Title is required"),
     }),
 
-    // Slug - auto-generated from title
+    // Slug
     defineField({
       name: "slug",
       type: "slug",
@@ -34,7 +29,7 @@ export const serviceType = defineType({
       validation: (Rule) => Rule.required().error("Slug is required"),
     }),
 
-    // Category - for grouping services
+    // Category
     defineField({
       name: "category",
       type: "string",
@@ -44,12 +39,13 @@ export const serviceType = defineType({
           { title: "App Development", value: "app-development" },
           { title: "Social Media Marketing", value: "social-media-marketing" },
           { title: "AI Services", value: "ai-services" },
+          { title: "Creative & Design", value: "creative-design" },
         ],
       },
       validation: (Rule) => Rule.required().error("Category is required"),
     }),
 
-    // Short description - for cards and listings
+    // Short description
     defineField({
       name: "shortDescription",
       type: "text",
@@ -61,7 +57,7 @@ export const serviceType = defineType({
           .error("Short description must be between 50 and 300 characters"),
     }),
 
-    // Features - bullet points for service details
+    // Features
     defineField({
       name: "features",
       type: "array",
@@ -72,7 +68,7 @@ export const serviceType = defineType({
           .error("At least 3 features are required"),
     }),
 
-    // CTA Text - button text
+    // CTA Text
     defineField({
       name: "ctaText",
       type: "string",
@@ -80,7 +76,7 @@ export const serviceType = defineType({
       validation: (Rule) => Rule.required().error("CTA text is required"),
     }),
 
-    // CTA Style - button variant
+    // CTA Style
     defineField({
       name: "ctaStyle",
       type: "string",
@@ -94,7 +90,7 @@ export const serviceType = defineType({
       validation: (Rule) => Rule.required().error("CTA style is required"),
     }),
 
-    // Display order - for sorting
+    // Display order
     defineField({
       name: "order",
       type: "number",
@@ -102,21 +98,14 @@ export const serviceType = defineType({
       validation: (Rule) => Rule.required().min(0).error("Order must be a positive number"),
     }),
 
-    // Icon - optional service icon
+    // Icon
     defineField({
       name: "icon",
       type: "string",
       description: "Lucide icon name (e.g., 'Code', 'Smartphone', 'Rocket')",
     }),
 
-    // Featured flag for highlighting services
-    defineField({
-      name: "featured",
-      type: "boolean",
-      initialValue: false,
-    }),
-
-    // Active flag - hide inactive services
+    // Active flag
     defineField({
       name: "isActive",
       type: "boolean",

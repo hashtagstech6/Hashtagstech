@@ -1,25 +1,25 @@
 /**
- * Career Schema
+ * Career Schema (Simplified)
  *
  * Sanity schema for job postings/career opportunities.
- * Includes job details, requirements, benefits, and salary info.
+ * Only contains fields that are actually fetched and used on the frontend.
  */
 
-import { defineType, defineField, defineArrayMember } from "sanity";
+import { defineType, defineField } from "sanity";
 
 export const careerType = defineType({
   name: "career",
   title: "Job Opening",
   type: "document",
   fields: [
-    // Job Title - required
+    // Job Title
     defineField({
       name: "title",
       type: "string",
       validation: (Rule) => Rule.required().error("Job title is required"),
     }),
 
-    // Slug - auto-generated from title
+    // Slug
     defineField({
       name: "slug",
       type: "slug",
@@ -69,50 +69,15 @@ export const careerType = defineType({
       validation: (Rule) => Rule.required().error("Employment type is required"),
     }),
 
-    // Job Description - Portable Text for rich content
+    // Job Description
     defineField({
       name: "description",
-      type: "array",
-      of: [
-        defineArrayMember({
-          type: "block",
-          styles: [
-            { title: "Normal", value: "normal" },
-            { title: "Heading 2", value: "h2" },
-            { title: "Heading 3", value: "h3" },
-            { title: "Quote", value: "blockquote" },
-          ],
-          lists: [
-            { title: "Bullet", value: "bullet" },
-            { title: "Numbered", value: "number" },
-          ],
-          marks: {
-            decorators: [
-              { title: "Strong", value: "strong" },
-              { title: "Emphasis", value: "em" },
-              { title: "Code", value: "code" },
-            ],
-            annotations: [
-              {
-                title: "URL",
-                name: "link",
-                type: "object",
-                fields: [
-                  {
-                    title: "URL",
-                    name: "href",
-                    type: "url",
-                  },
-                ],
-              },
-            ],
-          },
-        }),
-      ],
+      type: "text",
+      rows: 10,
       validation: (Rule) => Rule.required().error("Job description is required"),
     }),
 
-    // Requirements - list of strings
+    // Requirements
     defineField({
       name: "requirements",
       type: "array",
@@ -123,7 +88,7 @@ export const careerType = defineType({
           .error("At least one requirement is required"),
     }),
 
-    // Benefits - list of strings
+    // Benefits
     defineField({
       name: "benefits",
       type: "array",
@@ -179,7 +144,7 @@ export const careerType = defineType({
       ],
     }),
 
-    // Active status - controls whether job is shown on site
+    // Active status
     defineField({
       name: "isActive",
       type: "boolean",
@@ -195,7 +160,7 @@ export const careerType = defineType({
       validation: (Rule) => Rule.required().error("Publication date is required"),
     }),
 
-    // Application URL or email
+    // Application URL
     defineField({
       name: "applicationUrl",
       type: "url",

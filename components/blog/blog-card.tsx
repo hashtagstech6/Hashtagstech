@@ -18,11 +18,11 @@ export function BlogCard({ post }: { post: BlogPost }) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <article className="group bg-white rounded-2xl border border-border/50 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
+    <article className="group bg-white rounded-2xl border border-border/50 overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
       {/* Featured Image */}
       <Link
         href={`/blog/${post.slug}`}
-        className="block aspect-video relative overflow-hidden bg-muted"
+        className="block aspect-video relative overflow-hidden bg-muted no-underline"
       >
         {imageError ? (
           <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
@@ -43,6 +43,7 @@ export function BlogCard({ post }: { post: BlogPost }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             onError={() => setImageError(true)}
+            unoptimized={post.mainImage.startsWith('https://')}
           />
         )}
       </Link>
@@ -62,14 +63,14 @@ export function BlogCard({ post }: { post: BlogPost }) {
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-bold mb-3 line-clamp-2 text-foreground group-hover:text-primary transition-colors">
-          <Link href={`/blog/${post.slug}`}>
+        <h2 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+          <Link href={`/blog/${post.slug}`} className="no-underline hover:no-underline">
             {post.title}
           </Link>
         </h2>
 
         {/* Excerpt */}
-        <p className="text-muted-foreground mb-6 line-clamp-3 flex-1 leading-relaxed">
+        <p className="text-muted-foreground line-clamp-4 leading-relaxed">
           {post.excerpt}
         </p>
 
@@ -89,7 +90,7 @@ export function RelatedPostCard({ post }: { post: BlogPost }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
+      className="bg-white rounded-xl shadow-md border border-border/50 hover:border-primary/50 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col no-underline hover:no-underline hover:-translate-y-1 group"
     >
       <div className="relative aspect-video overflow-hidden bg-muted">
         {imageError ? (
@@ -111,6 +112,7 @@ export function RelatedPostCard({ post }: { post: BlogPost }) {
             className="object-cover hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
             onError={() => setImageError(true)}
+            unoptimized={post.mainImage.startsWith('https://')}
           />
         )}
       </div>
@@ -153,6 +155,7 @@ export function BlogFeaturedImage({ src, alt }: { src: string; alt: string }) {
           priority
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
           onError={() => setImageError(true)}
+          unoptimized={src.startsWith('https://')}
         />
       )}
     </div>

@@ -1,12 +1,8 @@
 /**
- * Client/Testimonial Schema
+ * Client Testimonial Schema (Simplified)
  *
- * Sanity schema for client testimonials with:
- * - Client name and company
- * - Photo
- * - Rating
- * - Quote/testimonial
- * - Project or service provided
+ * Sanity schema for client testimonials.
+ * Only contains fields that are actually used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -25,14 +21,6 @@ export const clientType = defineType({
       validation: (Rule) => Rule.required().error("Client name is required"),
     }),
 
-    // Slug - auto-generated from name
-    defineField({
-      name: "slug",
-      type: "slug",
-      options: { source: "name" },
-      validation: (Rule) => Rule.required().error("Slug is required"),
-    }),
-
     // Company Name
     defineField({
       name: "company",
@@ -46,7 +34,7 @@ export const clientType = defineType({
       type: "string",
     }),
 
-    // Photo
+    // Client Photo
     defineField({
       name: "photo",
       type: "image",
@@ -55,10 +43,10 @@ export const clientType = defineType({
         {
           name: "alt",
           type: "string",
-          title: "Alternative Text",
-          validation: (Rule) => Rule.required().error("Alt text is required for accessibility"),
+          validation: (Rule) => Rule.required().error("Alt text is required"),
         },
       ],
+      validation: (Rule) => Rule.required().error("Client photo is required"),
     }),
 
     // Rating (1-5 stars)
@@ -92,48 +80,11 @@ export const clientType = defineType({
       description: "The project or service provided to this client",
     }),
 
-    // Industry
-    defineField({
-      name: "industry",
-      type: "string",
-      options: {
-        list: [
-          { title: "Technology", value: "technology" },
-          { title: "Finance", value: "finance" },
-          { title: "Healthcare", value: "healthcare" },
-          { title: "E-commerce", value: "ecommerce" },
-          { title: "Education", value: "education" },
-          { title: "Other", value: "other" },
-        ],
-      },
-    }),
-
-    // Case Study Link (if exists)
-    defineField({
-      name: "caseStudy",
-      type: "reference",
-      to: [{ type: "successStory" }],
-    }),
-
-    // Featured flag for homepage highlighting
-    defineField({
-      name: "featured",
-      type: "boolean",
-      initialValue: false,
-    }),
-
     // Active flag
     defineField({
       name: "isActive",
       type: "boolean",
       initialValue: true,
-    }),
-
-    // Display order
-    defineField({
-      name: "order",
-      type: "number",
-      description: "Lower numbers appear first",
     }),
   ],
 
@@ -147,7 +98,6 @@ export const clientType = defineType({
     },
     prepare(selection) {
       const { title, company, rating, media } = selection;
-      // Generate star display for preview
       const stars = "⭐".repeat(rating || 5);
       return {
         title,

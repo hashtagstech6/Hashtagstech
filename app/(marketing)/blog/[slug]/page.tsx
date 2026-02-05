@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getAllBlogPosts, getBlogPostBySlug } from "@/data/blog-posts";
 import type { BlogPost } from "@/types/blog";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -16,35 +15,35 @@ interface SanityBlogPost {
   _id: string;
   title: string;
   slug: string;
-  excerpt: string;
-  mainImage: {
-    asset: {
-      _id: string;
-      url: string;
+  excerpt?: string;  // Can be null/undefined
+  mainImage?: {
+    asset?: {
+      _id?: string;
+      url?: string;
     };
-    alt: string;
-  };
-  content: any; // Portable Text array
+    alt?: string;
+  } | null;  // Can be null/undefined
+  content?: any; // Portable Text array, can be null/undefined
   author: {
     _id: string;
     name: string;
     slug: string;
-    image: {
-      asset: {
-        _id: string;
-        url: string;
+    image?: {
+      asset?: {
+        _id?: string;
+        url?: string;
       };
-      alt: string;
-    };
+      alt?: string;
+    } | null;  // Can be null/undefined
     bio?: string;
     jobTitle?: string;
   };
-  categories: Array<{
+  categories?: Array<{
     _id: string;
-    name: string;
+    name?: string;
     slug: string;
     color?: string;
-  }>;
+  }>;  // Can be null/undefined
   publishedAt: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -55,56 +54,68 @@ interface SanityBlogPost {
  * Generate static params for all blog posts
  */
 export async function generateStaticParams() {
-  const config = validateSanityConfig();
+  const client = getClient();
+  if (!client) return [];
 
-  if (config.valid) {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/posts`, {
-        next: { revalidate: 60 },
-      });
+  const query = `*[_type == "post"]{ "slug": slug.current }`;
+  const posts = await client.fetch(query);
 
-      if (response.ok) {
-        const posts: SanityBlogPost[] = await response.json();
-        return posts.map((post) => ({
-          slug: post.slug,
-        }));
-      }
-    } catch {
-      // Fall through to hardcoded data
-    }
-  }
-
-  // Fall back to hardcoded data
-  const posts = getAllBlogPosts();
-  return posts.map((post) => ({
+  return posts.map((post: { slug: string }) => ({
     slug: post.slug,
   }));
 }
 
 /**
- * Fetch blog post by slug from Sanity or hardcoded data
+ * Fetch blog post by slug from Sanity API
  */
-async function fetchBlogPost(slug: string): Promise<SanityBlogPost | BlogPost | null> {
-  const config = validateSanityConfig();
+import { getClient } from "@/sanity/lib/client";
 
-  // Try Sanity API first
-  if (config.valid) {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/posts/${slug}`,
-        { next: { revalidate: 60 } }
-      );
+/**
+ * Fetch blog post by slug from Sanity API
+ */
+async function fetchBlogPost(slug: string): Promise<SanityBlogPost | null> {
+  const client = getClient();
+  if (!client) return null;
 
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch {
-      // Fall through to hardcoded data
+  const query = `
+    *[_type == "post" && slug.current == $slug][0] {
+      _id,
+      title,
+      "slug": slug.current,
+      excerpt,
+      mainImage {
+        asset-> {
+          _id,
+          url
+        },
+        alt
+      },
+      content,
+      author-> {
+        _id,
+        name,
+        "slug": slug.current,
+        image {
+          asset-> {
+            _id,
+            url
+          }
+        },
+        bio
+      },
+      categories[]-> {
+        _id,
+        name,
+        "slug": slug.current,
+        color
+      },
+      publishedAt,
+      seoTitle,
+      seoDescription
     }
-  }
+  `;
 
-  // Fall back to hardcoded data
-  return getBlogPostBySlug(slug) || null;
+  return client.fetch(query, { slug });
 }
 
 /**
@@ -125,12 +136,10 @@ export async function generateMetadata({
   }
 
   const title = post.title;
-  const excerpt = "excerpt" in post ? post.excerpt : "";
-  const imageUrl = typeof post.mainImage === "string"
-    ? post.mainImage
-    : (post.mainImage as any).asset?.url || "";
-  const authorName = "author" in post ? post.author.name : "";
-  const publishedAt = "publishedAt" in post ? post.publishedAt : "";
+  const excerpt = post.excerpt || "";
+  const imageUrl = post.mainImage?.asset?.url || "";
+  const authorName = post.author.name;
+  const publishedAt = post.publishedAt;
 
   return {
     title: `${title} | Hashtag Tech Blog`,
@@ -162,6 +171,49 @@ export async function generateMetadata({
 export const revalidate = 60;
 
 /**
+ * Fetch all posts (for related posts section)
+ */
+async function fetchAllPosts(): Promise<SanityBlogPost[]> {
+  const client = getClient();
+  if (!client) return [];
+
+  const query = `
+    *[_type == "post"] | order(publishedAt desc) {
+      _id,
+      title,
+      "slug": slug.current,
+      excerpt,
+      mainImage {
+        asset-> {
+          _id,
+          url
+        },
+        alt
+      },
+      author-> {
+        _id,
+        name,
+        "slug": slug.current,
+        image {
+          asset-> {
+            _id,
+            url
+          }
+        }
+      },
+      categories[]-> {
+        _id,
+        name,
+        "slug": slug.current
+      },
+      publishedAt
+    }
+  `;
+
+  return client.fetch(query);
+}
+
+/**
  * Blog Post Detail Page Component
  */
 export default async function BlogPostPage({
@@ -176,30 +228,26 @@ export default async function BlogPostPage({
     notFound();
   }
 
-  // Check data type
-  const isSanityData = !("id" in post) && "_id" in post;
+  // Fetch related posts
+  const allPosts = await fetchAllPosts();
+  const relatedPosts = allPosts
+    .filter(p => p._id !== post._id)
+    .slice(0, 3);
 
-  // Normalize data with proper type assertions
+  // Normalize data
   const title = post.title;
-  const excerpt = isSanityData ? (post as SanityBlogPost).excerpt : (post as BlogPost).excerpt;
-  const categories = isSanityData ? (post as SanityBlogPost).categories : (post as BlogPost).categories;
-  const author = isSanityData ? (post as SanityBlogPost).author : (post as BlogPost).author;
-  const publishedAt = isSanityData ? (post as SanityBlogPost).publishedAt : (post as BlogPost).publishedAt;
-  const authorImage = typeof author?.image === "string"
-    ? author.image
-    : (author as SanityBlogPost["author"])?.image?.asset?.url || "/images/authors/placeholder.jpg";
+  const excerpt = post.excerpt;
+  const categories = post.categories;
+  const author = post.author;
+  const publishedAt = post.publishedAt;
+  const authorImage = author?.image?.asset?.url || "/placeholder.svg";
   const authorBio = author?.bio || "";
-  const mainImageUrl = isSanityData
-    ? ((post as SanityBlogPost).mainImage as any)?.asset?.url || "/images/blog/placeholder.jpg"
-    : (post as BlogPost).mainImage;
-  const content = isSanityData ? (post as SanityBlogPost).content : null;
-  const hardcodedContent = !isSanityData ? (post as BlogPost).content : "";
-  const postId = isSanityData ? (post as SanityBlogPost)._id : (post as BlogPost).id;
+  const mainImageUrl = post.mainImage?.asset?.url || "/placeholder.svg";
+  const content = post.content;
+  const postId = post._id;
 
   return (
     <>
-      <Header />
-
       <main className="min-h-screen">
         {/* Article Header */}
         <article className="bg-gradient-to-b from-primary/10 to-background py-12 md:py-20">
@@ -230,17 +278,19 @@ export default async function BlogPostPage({
               </nav>
 
               {/* Categories */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {categories.map((category: any) => (
-                  <Link
-                    key={category.id || category._id}
-                    href={`/blog/category/${category.slug}`}
-                    className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </div>
+              {categories && categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {categories.map((category: any) => (
+                    <Link
+                      key={category.id || category._id}
+                      href={`/blog/category/${category.slug}`}
+                      className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Title */}
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -281,24 +331,18 @@ export default async function BlogPostPage({
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               {/* Excerpt */}
-              <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-12">
-                {excerpt}
-              </p>
+              {excerpt && (
+                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-12">
+                  {excerpt}
+                </p>
+              )}
 
               {/* Content */}
-              {isSanityData && content ? (
+              {content ? (
                 <div className="prose prose-lg max-w-none">
                   <PortableText value={content} />
                 </div>
-              ) : (
-                <div className="prose prose-lg max-w-none">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: hardcodedContent.replace(/\n/g, "<br />"),
-                    }}
-                  />
-                </div>
-              )}
+              ) : null}
 
               {/* Author Bio */}
               <div className="mt-16 pt-8 border-t border-border">
@@ -327,26 +371,44 @@ export default async function BlogPostPage({
         </article>
 
         {/* Related Posts */}
-        <section className="py-16 bg-muted">
-          <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold mb-8 text-center">
-                More Articles
-              </h2>
-              <div className="grid md:grid-cols-3 gap-8">
-                {getAllBlogPosts()
-                  .filter((p) => p.id !== postId)
-                  .slice(0, 3)
-                  .map((relatedPost) => (
-                    <RelatedPostCard key={relatedPost.id} post={relatedPost} />
-                  ))}
+        {relatedPosts.length > 0 && (
+          <section className="py-16 bg-muted">
+            <div className="container mx-auto px-4">
+              <div className="max-w-6xl mx-auto">
+                <h2 className="text-3xl font-bold mb-8 text-center">
+                  More Articles
+                </h2>
+                <div className="grid md:grid-cols-3 gap-8">
+                  {relatedPosts.map((relatedPost) => {
+                    const adaptedPost = {
+                      id: relatedPost._id,
+                      title: relatedPost.title,
+                      slug: relatedPost.slug,
+                      excerpt: relatedPost.excerpt || "",
+                      mainImage: relatedPost.mainImage?.asset?.url || "/placeholder.svg",
+                      content: "",
+                      author: {
+                        id: relatedPost.author._id,
+                        name: relatedPost.author.name,
+                        slug: relatedPost.author.slug,
+                        image: relatedPost.author.image?.asset?.url || "/placeholder.svg",
+                        bio: "",
+                      },
+                      categories: relatedPost.categories?.map((cat) => ({
+                        id: cat._id,
+                        name: cat.name || "",
+                        slug: cat.slug,
+                      })) || [],
+                      publishedAt: relatedPost.publishedAt,
+                    };
+                    return <RelatedPostCard key={relatedPost._id} post={adaptedPost} />;
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
-
-      <Footer />
     </>
   );
 }

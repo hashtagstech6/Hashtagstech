@@ -3,7 +3,7 @@ name: sanity-integration
 description: Build production Sanity CMS integrations with Next.js, SEO optimization, and MCP tools. Use when adding Sanity CMS for products, blogs, services, events, portfolios, or any content-managed features to websites. Handles schema design, API routes, SEO, image optimization, Live Content API, and reusable component patterns.
 allowed-tools: Read, Write, Glob, Grep, Edit, mcp__context7__*, mcp__tavily__*
 category: fullstack
-version: 1.2.0
+version: 1.6.0
 ---
 
 # Sanity CMS Integration
@@ -15,10 +15,10 @@ Build production-grade Sanity CMS integrations with Next.js, featuring SEO optim
 This skill follows a structured progression from A2 (Elementary) to B2 (Advanced Independent):
 
 ```
-[A2] Setup → [A2] Images → [B1] Schema → [B1] Queries → [B1] API → [B2] ISR → [B2] SEO → [B2] Live
+[A2] Setup → [A2] Images → [B1] Schema → [B1] Queries → [B1] API → [B1.5] Migration → [B2] ISR → [B2] SEO → [B2] Live
 ```
 
-**Time Estimate**: 8-12 hours to complete all phases (A2→B2)
+**Time Estimate**: 9-13 hours to complete all phases (A2→B2)
 
 ---
 
@@ -552,6 +552,674 @@ export async function GET() {
 
 ---
 
+## Phase 6.5: Data Migration & Seeding [B1]
+
+**Prerequisites**: Phase 3 complete (schemas defined)
+**Estimated Time**: 45 minutes
+**Cognitive Load**: Medium (3-4 concepts)
+
+### Learning Objective
+Migrate existing data to Sanity CMS using the Sanity client's mutate method.
+
+### Success Criteria
+- [ ] Create migration script with Sanity client
+- [ ] Use `createOrReplace` for idempotent migrations
+- [ ] Add `_key` to all array items for Studio editing
+- [ ] Format slugs as `{ _type: "slug", current: "..." }`
+- [ ] Match schema field types exactly
+
+### Migration Script Template
+
+```typescript
+// scripts/migrate-to-sanity.ts
+/**
+ * Sanity CMS Migration Script
+ *
+ * This script migrates existing data to Sanity CMS.
+ * Run with: npx dotenv-cli -e .env.local -- npx tsx scripts/migrate-to-sanity.ts
+ */
+
+import { createClient } from "@sanity/client";
+
+// Configuration from environment
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "";
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
+const token = process.env.SANITY_API_WRITE_TOKEN || "";
+
+if (!token) {
+  console.error("❌ SANITY_API_WRITE_TOKEN environment variable is required");
+  process.exit(1);
+}
+
+// Create Sanity client
+const client = createClient({
+  projectId,
+  dataset,
+  apiVersion: "2024-01-01",
+  token,
+  useCdn: false,
+});
+
+// ============ HELPER FUNCTIONS ============
+
+/**
+ * Generate a unique key for array items
+ * Prevents "Missing keys" error in Sanity Studio
+ */
+function generateKey(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generate URL-safe slug from text
+ */
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Convert local image path to Sanity image reference
+ * Note: Images must be uploaded to Sanity assets first
+ */
+function createImageRef(assetId: string): {
+  _type: string;
+  asset: { _ref: string };
+} {
+  return {
+    _type: "image",
+    asset: {
+      _ref: assetId,  // Format: "image-ABC123-800x1200-jpg"
+    },
+  };
+}
+
+// ============ MIGRATION FUNCTIONS ============
+
+/**
+ * Example: Migrate Blog Posts
+ */
+async function migrateBlogPosts() {
+  console.log("📝 Migrating Blog Posts...");
+
+  const posts = [
+    {
+      _id: "post-my-first-post",
+      _type: "post",
+      title: "My First Post",
+      slug: { _type: "slug", current: "my-first-post" },
+      excerpt: "This is a summary of my post...",
+
+      // ✅ Portable Text content (rich text)
+      content: [
+        {
+          _type: "block",
+          style: "normal",
+          children: [
+            { _type: "span", text: "This is the " },
+            { _type: "span", marks: ["strong"], text: "content" },
+            { _type: "span", text: " of my blog post." },
+          ],
+        },
+        {
+          _type: "block",
+          style: "h2",
+          children: [{ _type: "span", text: "Key Section" }],
+        },
+      ],
+
+      // ✅ Image with optional asset reference
+      // mainImage: createImageRef("image-xxx-800x600-jpg"),
+
+      // ✅ Reference to author document
+      author: {
+        _type: "reference",
+        _ref: "author-john-doe",
+      },
+
+      // ✅ Array of category references
+      categories: [
+        { _type: "reference", _ref: "category-tech" },
+        { _type: "reference", _ref: "category-tutorial" },
+      ],
+
+      publishedAt: "2024-01-15T09:00:00Z",
+      featured: true,
+    },
+  ];
+
+  const mutations = posts.map((post) => ({
+    createOrReplace: post,
+  }));
+
+  await client.mutate(mutations);
+  console.log(`✅ Migrated ${posts.length} blog posts`);
+}
+
+/**
+ * Example: Migrate Products
+ */
+async function migrateProducts() {
+  console.log("🛍️ Migrating Products...");
+
+  const products = [
+    {
+      _id: "product-awesome-widget",
+      _type: "product",
+      title: "Awesome Widget",
+      slug: { _type: "slug", current: "awesome-widget" },
+
+      // ✅ Array with _key for each item (CRITICAL for Studio editing)
+      colors: [
+        { _key: generateKey(), name: "Red", hex: "#FF0000" },
+        { _key: generateKey(), name: "Blue", hex: "#0000FF" },
+        { _key: generateKey(), name: "Green", hex: "#00FF00" },
+      ],
+
+      // ✅ Simple string array (Sanity auto-generates keys)
+      tags: ["widget", "awesome", "cool"],
+
+      // ✅ Object array with nested structure
+      specifications: [
+        {
+          _key: generateKey(),
+          label: "Weight",
+          value: "1.5 lbs",
+        },
+        {
+          _key: generateKey(),
+          label: "Dimensions",
+          value: "10 x 5 x 3 inches",
+        },
+      ],
+
+      price: 29.99,
+      inStock: true,
+    },
+  ];
+
+  const mutations = products.map((product) => ({
+    createOrReplace: product,
+  }));
+
+  await client.mutate(mutations);
+  console.log(`✅ Migrated ${products.length} products`);
+}
+
+/**
+ * Example: Migrate Team Members
+ */
+async function migrateTeamMembers() {
+  console.log("👥 Migrating Team Members...");
+
+  const members = [
+    {
+      _id: "team-member-jane-smith",
+      _type: "teamMember",
+      name: "Jane Smith",
+      slug: { _type: "slug", current: "jane-smith" },
+      role: "Lead Developer",
+
+      // ✅ Array of strings for skills
+      skills: ["React", "TypeScript", "Node.js"],
+
+      // ✅ Photo is optional - handle null case
+      // photo: createImageRef("image-xxx-400x400-jpg"),
+
+      bio: "Jane is an experienced developer...",
+
+      // ✅ Social links as separate fields
+      linkedinUrl: "https://linkedin.com/in/jane",
+      githubUrl: "https://github.com/jane",
+
+      featured: true,
+      order: 1,
+    },
+  ];
+
+  const mutations = members.map((member) => ({
+    createOrReplace: member,
+  }));
+
+  await client.mutate(mutations);
+  console.log(`✅ Migrated ${members.length} team members`);
+}
+
+// ============ MAIN FUNCTION ============
+
+async function main() {
+  console.log("🚀 Starting Sanity CMS Migration...\n");
+  console.log(`Project ID: ${projectId}`);
+  console.log(`Dataset: ${dataset}\n`);
+
+  try {
+    await migrateBlogPosts();
+    await migrateProducts();
+    await migrateTeamMembers();
+
+    console.log("\n✅ Migration complete!");
+    console.log("\n📝 Next steps:");
+    console.log("1. Visit Sanity Studio to review imported content");
+    console.log("2. Upload images and update asset references");
+    console.log("3. Add missing content (images, rich text, etc.)");
+  } catch (error) {
+    console.error("❌ Migration failed:", error);
+    process.exit(1);
+  }
+}
+
+// Run migration
+main();
+```
+
+### Step-by-Step Migration Guide
+
+**Step 1: Prepare Environment Variables**
+
+```bash
+# .env.local
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_READ_TOKEN=your-read-token
+SANITY_API_WRITE_TOKEN=your-write-token  # Required for migrations!
+```
+
+**Step 2: Create Migration Script**
+
+```bash
+# Create the scripts directory
+mkdir -p scripts
+
+# Create migration file
+touch scripts/migrate-to-sanity.ts
+```
+
+**Step 3: Copy Template & Customize**
+
+1. Copy the template above into `scripts/migrate-to-sanity.ts`
+2. Replace example data with your actual data
+3. Match field names to your Sanity schemas
+4. Add `_key` to all array items
+5. Format slugs as `{ _type: "slug", current: "..." }`
+
+**Step 4: Install Dependencies**
+
+```bash
+npm install --save-dev tsx @types/node
+```
+
+**Step 5: Run Migration**
+
+```bash
+# With dotenv-cli (recommended)
+npx dotenv-cli -e .env.local -- npx tsx scripts/migrate-to-sanity.ts
+
+# Or load .env manually
+export $(cat .env.local | xargs) && npx tsx scripts/migrate-to-sanity.ts
+```
+
+**Step 6: Verify in Studio**
+
+1. Open http://localhost:3000/studio
+2. Navigate to each content type
+3. Check that all fields are populated correctly
+4. Test editing arrays (should work with `_key` present)
+
+### Image Handling in Migrations
+
+**Option 1: Upload Images First, Then Reference (Recommended)**
+
+```typescript
+// ✅ BEST: Upload via Sanity Studio, then reference by ID
+const product = {
+  _id: "product-1",
+  _type: "product",
+  title: "My Product",
+  mainImage: {
+    _type: "image",
+    asset: {
+      _ref: "image-ABC123-800x600-jpg",  // From Studio → Assets → Copy ID
+    },
+  },
+};
+```
+
+**Option 2: Skip Images, Add Later**
+
+```typescript
+// ✅ GOOD: Skip images initially, add via Studio later
+const product = {
+  _id: "product-1",
+  _type: "product",
+  title: "My Product",
+  // Don't include mainImage field if no asset available
+};
+```
+
+**Option 3: Upload via API (Advanced)**
+
+```typescript
+// ⚠️ ADVANCED: Upload image assets via API
+import { createClient } from "@sanity/client";
+
+async function uploadImage(imageUrl: string): Promise<string> {
+  // Fetch image
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+
+  // Upload to Sanity
+  const asset = await client.assets.upload("image", blob, {
+    filename: "product-image.jpg",
+  });
+
+  return asset._id;  // Returns "image-ABC123-800x600-jpg"
+}
+
+// Use in migration
+const imageId = await uploadImage("https://example.com/image.jpg");
+const product = {
+  mainImage: {
+    _type: "image",
+    asset: { _ref: imageId },
+  },
+};
+```
+
+**Handling Null/Optional Images in Components**
+
+```typescript
+// ✅ ALWAYS use optional chaining for images
+const ImageComponent = ({ post }) => {
+  return (
+    <img
+      src={post.mainImage?.asset?.url || "/images/placeholder.jpg"}
+      alt={post.mainImage?.alt || post.title}
+    />
+  );
+};
+
+// ✅ OR check before accessing
+const imageUrl = post.mainImage?.asset?.url;
+if (!imageUrl) {
+  return <PlaceholderImage />;
+}
+```
+
+### Critical Migration Rules
+
+| Rule | Why | Example |
+|------|-----|---------|
+| **Always add `_key`** | Studio needs unique keys to edit arrays | `{ _key: "abc123", value: "text" }` |
+| **Use `createOrReplace`** | Idempotent - safe to run multiple times | Same `_id` will update, not duplicate |
+| **Match field types** | Schema validation will reject mismatches | Array field → array data, not string |
+| **Format slugs correctly** | Sanity expects slug object type | `{ _type: "slug", current: "my-slug" }` |
+| **Use write token** | Read-only token can't mutate | `SANITY_API_WRITE_TOKEN` required |
+
+### Field Type Mapping
+
+| Schema Type | Migration Data Format | Example |
+|-------------|----------------------|---------|
+| `slug` | `{ _type: "slug", current: "value" }` | `{ slug: { _type: "slug", current: "my-post" } }` |
+| `string` | `"plain text"` | `{ title: "Hello World" }` |
+| `text` | `"long text content"` | `{ description: "Long description..." }` |
+| `array` of strings | `["item1", "item2"]` (Sanity adds keys) | `{ tags: ["react", "nextjs"] }` |
+| `array` of objects | `[{ _key: "...", field: "value" }]` | See "Object Arrays" below |
+| `boolean` | `true` or `false` | `{ featured: true }` |
+| `number` | `123` | `{ price: 29.99 }` |
+| `datetime` | `"2024-01-15T09:00:00Z"` | `{ publishedAt: "2024-01-15T09:00:00Z" }` |
+| `date` | `"2024-01-15"` | `{ eventDate: "2024-01-15" }` |
+| `reference` | `{ _type: "reference", _ref: "target-id" }` | `{ author: { _type: "reference", _ref: "author-123" } }` |
+| `array` of references | `[{ _type: "reference", _ref: "id" }]` | See "Reference Arrays" below |
+| `image` | `{ _type: "image", asset: { _ref: "image-xxx" } }` | See "Image Handling" below |
+| `file` | `{ _type: "file", asset: { _ref: "file-xxx" } }` | `{ attachment: { _type: "file", asset: { _ref: "file-abc" } } }` |
+| `geopoint` | `{ _type: "geopoint", lat: 0, lng: 0 }` | `{ location: { _type: "geopoint", lat: 40.7, lng: -74.0 } }` |
+| `block` (Portable Text) | `[{ _type: "block", children: [...] }]` | See "Portable Text" below |
+
+#### Object Arrays (CRITICAL - Must Include `_key`)
+
+```typescript
+// ❌ WRONG - Missing _key (causes "Missing keys" error)
+{
+  features: [
+    { title: "Fast", description: "Very fast" },
+    { title: "Secure", description: "Very secure" },
+  ]
+}
+
+// ✅ CORRECT - Each item has unique _key
+{
+  features: [
+    { _key: "feat-1", title: "Fast", description: "Very fast" },
+    { _key: "feat-2", title: "Secure", description: "Very secure" },
+  ]
+}
+
+// Use helper function
+{
+  features: data.map(item => ({
+    _key: generateKey(),
+    ...item
+  }))
+}
+```
+
+#### Reference Arrays
+
+```typescript
+// Single reference
+{
+  author: { _type: "reference", _ref: "author-john-doe" }
+}
+
+// Array of references
+{
+  categories: [
+    { _type: "reference", _ref: "category-tech" },
+    { _type: "reference", _ref: "category-tutorial" },
+  ]
+}
+
+// For self-referencing (document references itself in array)
+{
+  relatedPosts: [
+    { _type: "reference", _ref: "post-abc123", _strengthenOnPublish: true }
+  ]
+}
+```
+
+#### Image Handling
+
+**Option 1: Reference Existing Asset (Recommended)**
+
+```typescript
+{
+  mainImage: {
+    _type: "image",
+    asset: {
+      _ref: "image-ABC123-800x600-jpg",  // From Studio → Assets
+    }
+  }
+}
+```
+
+**Option 2: Image with Hotspot and Alt Text**
+
+```typescript
+{
+  mainImage: {
+    _type: "image",
+    asset: {
+      _ref: "image-ABC123-800x600-jpg"
+    },
+    hotspot: {
+      x: 0.5,
+      y: 0.5,
+      height: 0.3,
+      width: 0.3
+    },
+    crop: {
+      left: 0.1,
+      top: 0.1,
+      right: 0.9,
+      bottom: 0.9
+    }
+  }
+}
+```
+
+**Option 3: Skip Image Field (If No Asset)**
+
+```typescript
+{
+  title: "My Post",
+  // Don't include mainImage if no asset available
+  // Components should handle null case with optional chaining
+}
+```
+
+**Handling Null Images in Components:**
+
+```typescript
+// ✅ ALWAYS use optional chaining
+<img
+  src={post.mainImage?.asset?.url || "/placeholder.jpg"}
+  alt={post.mainImage?.alt || post.title}
+/>
+
+// ✅ OR check before rendering
+{post.mainImage?.asset?.url ? (
+  <img src={post.mainImage.asset.url} alt={post.mainImage.alt || ""} />
+) : (
+  <PlaceholderImage />
+)}
+
+// ✅ OR use optional chaining with urlFor helper
+import { urlFor } from "@/sanity/lib/image";
+
+<img
+  src={urlFor(post.mainImage).url() || "/placeholder.jpg"}
+  alt={post.mainImage?.alt || post.title}
+/>
+```
+
+#### Portable Text (Rich Content)
+
+```typescript
+// Simple paragraph
+{
+  content: [
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "This is a paragraph." }
+      ]
+    }
+  ]
+}
+
+// With formatting (bold, italic)
+{
+  content: [
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "This is " },
+        { _type: "span", marks: ["strong"], text: "bold" },
+        { _type: "span", text: " and " },
+        { _type: "span", marks: ["em"], text: "italic" },
+        { _type: "span", text: "." }
+      ]
+    }
+  ]
+}
+
+// Heading
+{
+  content: [
+    {
+      _type: "block",
+      style: "h2",
+      children: [
+        { _type: "span", text: "Section Heading" }
+      ]
+    }
+  ]
+}
+
+// List
+{
+  content: [
+    {
+      _type: "block",
+      style: "normal",
+      listItem: "bullet",
+      level: 1,
+      children: [
+        { _type: "span", text: "First item" }
+      ]
+    },
+    {
+      _type: "block",
+      style: "normal",
+      listItem: "bullet",
+      level: 1,
+      children: [
+        { _type: "span", text: "Second item" }
+      ]
+    }
+  ]
+}
+
+// Link
+{
+  content: [
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "Visit " },
+        {
+          _type: "span",
+          marks: ["abc123"],
+          text: "our website"
+        }
+      ]
+    }
+  ],
+  marks: [
+    {
+      _key: "abc123",
+      _type: "link",
+      href: "https://example.com"
+    }
+  ]
+}
+```
+
+### Running the Migration
+
+```bash
+# With environment variables
+npx dotenv-cli -e .env.local -- npx tsx scripts/migrate-to-sanity.ts
+
+# Or with cross-env (Windows)
+npx cross-env SANITY_API_WRITE_TOKEN=xxx npx tsx scripts/migrate-to-sanity.ts
+```
+
+### Assessment
+- [ ] Migration runs without errors
+- [ ] Items appear in Sanity Studio
+- [ ] Array items are editable (no "missing keys" error)
+- [ ] Re-running migration updates existing items (doesn't duplicate)
+- [ ] All field types match schema expectations
+
+---
+
 ## Phase 7: Dynamic Routes with ISR [B2]
 
 **Prerequisites**: Phase 6 complete (API routes)
@@ -925,16 +1593,304 @@ export default async function BlogPost({
 
 ---
 
-## Common Pitfalls
+## Troubleshooting & Debugging Guide
+
+### Common Issues and Solutions
+
+This section covers real-world issues encountered during Sanity CMS integration with Next.js.
+
+| Issue | Symptoms | Cause | Solution |
+|-------|----------|-------|----------|
+| **Stale build cache** | Content shows old data even after Sanity updates | `.next` directory contains cached builds | Delete `.next` directory: `rm -rf .next` or `rd /s /q .next` (Windows) |
+| **Missing count mismatch** | Sanity Studio shows X items, frontend shows Y | Stale webpack cache holding old query results | Clear `.next` cache and rebuild |
+| **API returns wrong count** | API endpoint returns fewer items than Studio | Browser caching or stale build cache | Add cache-busting: `fetch(\`/api/endpoint?t=\${Date.now()}\`)` |
+| **Blog related posts empty** | "More articles coming soon" when posts exist | Missing `fetchAllPosts()` function | Add function to fetch all posts for related section |
+| **Dummy data showing** | Hardcoded fallback data appears instead of CMS data | Fallback data not removed from components | Return `null` instead of fallback objects |
+| **TypeScript build errors** | Build fails with type errors in migration scripts | Incorrect type usage in standalone scripts | Delete unused scripts or fix types |
+| **Placeholder images missing** | Broken image links for missing assets | Fallback `/placeholder.svg` removed | Keep placeholder image fallbacks in components |
+
+---
+
+### Debugging Methods
+
+#### 1. Verify Studio Data
+
+Always confirm data exists in Sanity Studio first:
+
+```bash
+# Open Sanity Studio Vision
+# Run query to verify data:
+*[_type == "yourType" && isActive == true]{
+  _id,
+  title,
+  "slug": slug.current,
+  isActive
+}
+```
+
+#### 2. Test API Endpoint Directly
+
+Use `curl` to verify API returns correct data:
+
+```bash
+# Test API endpoint
+curl http://localhost:3000/api/services
+
+# With cache-busting
+curl "http://localhost:3000/api/services?t=$(date +%s)"
+
+# Check response count
+curl http://localhost:3000/api/services | jq '. | length'
+```
+
+#### 3. Add Debug Logging
+
+Add console.log to API routes:
+
+```typescript
+// app/api/services/route.ts
+const services = await client.fetch(query, {}, { useCdn: false });
+console.log(`[API /api/services] Fetched ${services.length} services:`,
+  services.map(s => ({ id: s._id, title: s.title, isActive: s.isActive }))
+);
+```
+
+#### 4. Check Browser Console
+
+Look for fetch logs in browser console:
+
+```typescript
+// In client component
+useEffect(() => {
+  async function fetchData() {
+    const response = await fetch(`/api/services?t=${new Date().getTime()}`);
+    const data = await response.json();
+    console.log(`Fetched Services from Sanity: (${data.length})`, data);
+  }
+  fetchData();
+}, []);
+```
+
+#### 5. Clear Caches (In Order)
+
+```bash
+# 1. Clear Next.js build cache
+rm -rf .next
+
+# 2. Clear node_modules (if needed)
+rm -rf node_modules package-lock.json
+npm install
+
+# 3. Restart dev server
+npm run dev
+```
+
+---
+
+### Component-Level Troubleshooting
+
+#### Issue: Component Returns `null` But Should Show Content
+
+**Check these in order:**
+
+1. **Is the API returning data?**
+   ```bash
+   curl http://localhost:3000/api/your-endpoint
+   ```
+
+2. **Is the component handling loading state?**
+   ```typescript
+   if (loading) return <Skeleton />;  // Should show skeleton
+   if (data.length === 0) return null;  // Correct - no data
+   ```
+
+3. **Is Sanity config valid?**
+   ```typescript
+   const config = validateSanityConfig();
+   console.log('Sanity config:', config);  // Should show { valid: true }
+   ```
+
+---
+
+### Cache Strategy Issues
+
+| Problem | Solution |
+|---------|----------|
+| Content not updating after CMS change | Check `useCdn: false` for ISR, or clear `.next` cache |
+| API returns stale data | Add `Cache-Control: no-store` headers for development |
+| Browser caching API responses | Add cache-busting query param: `?t=${Date.now()}` |
+| Build includes old content | Delete `.next` and rebuild: `rm -rf .next && npm run build` |
+
+---
+
+### Data Migration Verification
+
+After migration, verify in this order:
+
+```bash
+# 1. Check Studio count
+# Open Studio, count items manually
+
+# 2. Verify via GROQ
+*[_type == "yourType"]{ _id, title } | count
+
+# 3. Test array editing
+# Try to edit an array field - should work without "Missing keys" error
+
+# 4. Verify references
+# Check that referenced documents exist
+*[_type == "post" && !defined(author)]{_id, title}
+```
+
+---
+
+### Environment Variable Issues
+
+| Symptom | Check | Fix |
+|---------|-------|-----|
+| `projectId` is empty | `.env.local` not loaded | Restart dev server after adding env vars |
+| API returns 401 | Missing/wrong read token | Verify `SANITY_API_READ_TOKEN` |
+| Writes fail | Missing write token | Add `SANITY_API_WRITE_TOKEN` |
+| Studio won't load | Wrong project ID | Check `.env.local` matches Sanity project |
+
+---
+
+### Quick Debug Checklist
+
+```
+□ Data visible in Sanity Studio?
+□ API endpoint returns correct data (curl test)?
+□ Browser console shows fetch success?
+□ `.next` cache cleared recently?
+□ Environment variables loaded correctly?
+□ Client configured with correct dataset?
+□ Query uses proper projections?
+□ Components use optional chaining for optional fields?
+□ Placeholder image fallbacks exist?
+□ Build runs without TypeScript errors?
+```
+
+---
+
+### Common Pitfalls
 
 | Pitfall | Cause | Solution |
 |---------|--------|----------|
-| Hydration mismatch | Using browser APIs in server components | Use `"use client"` for interactive components |
-| Missing alt text | Images without accessibility | Add alt field to all image schemas |
-| Slow queries | Not projecting specific fields | Always use GROQ projections |
-| CDN serving stale content | `useCdn: true` with ISR | Set `useCdn: false` for ISR |
-| Type errors | Sanity types not matching | Create proper TypeScript interfaces |
-| Params not awaited | Forgetting `await params` | Next.js 15 requires async params |
+| **Stale `.next` cache** | Build cache holds old query results | Delete `.next` directory and restart dev server |
+| **Browser caching API** | Fetch returns cached responses | Add `?t=${Date.now()}` cache-busting parameter |
+| **Missing `_key` in arrays** | Array items created via API without keys | Always add `_key` property to array items (see Array Key Pattern below) |
+| **Hydration mismatch** | Using browser APIs in server components | Use `"use client"` for interactive components |
+| **Missing alt text** | Images without accessibility | Add alt field to all image schemas |
+| **Slow queries** | Not projecting specific fields | Always use GROQ projections |
+| **CDN serving stale content** | `useCdn: true` with ISR | Set `useCdn: false` for ISR |
+| **Type errors** | Sanity types not matching | Create proper TypeScript interfaces |
+| **Params not awaited** | Forgetting `await params` | Next.js 15 requires async params |
+| **Wrong config location** | `sanity.config.ts` in subfolder | Must be at project root for `NextStudio` |
+| **Missing basePath** | Route doesn't match config | Set `basePath: '/studio'` in config |
+| **Metadata export error** | Exporting metadata from client component | Remove metadata exports from client components |
+| **Schema type mismatch** | Array field vs string data | Match schema field types with migrated data |
+| **Studio header overlap** | Fixed header covering Studio | Add `marginTop: "80px"` wrapper div |
+| **Null image access** | Accessing `.asset` on null image | Always use optional chaining: `mainImage?.asset?.url` |
+| **Missing alt on images** | Image without alt text | Add alt field to image schema, set as required |
+| **Image upload failure** | Large images or unsupported formats | Limit to 10MB, use webp/jpg/png |
+| **Wrong image ref format** | Using URL instead of asset reference | Use `{ _type: "image", asset: { _ref: "..." } }` |
+| **Undefined optional fields** | Not handling null/undefined in components | Use optional chaining everywhere: `field?.subField` |
+| **Date format errors** | Wrong datetime string format | Use ISO 8601: `"2024-01-15T09:00:00Z"` |
+| **Reference target missing** | Referencing non-existent document | Create referenced document first, or use weak reference |
+
+### Array Key Pattern (CRITICAL)
+
+**When creating array items via API client, ALWAYS include `_key` property:**
+
+```typescript
+// ❌ WRONG - Will cause "Missing keys" error in Studio
+const career = {
+  _type: "career",
+  requirements: [
+    "5+ years of experience",
+    "Strong proficiency in TypeScript",
+  ],
+}
+
+// ✅ CORRECT - Each array item has a unique _key
+const career = {
+  _type: "career",
+  requirements: [
+    { _key: "req-1", value: "5+ years of experience" },
+    { _key: "req-2", value: "Strong proficiency in TypeScript" },
+  ],
+}
+
+// OR for simple string arrays with Sanity's built-in handling:
+const career = {
+  _type: "career",
+  requirements: [
+    "5+ years of experience",  // Sanity auto-generates keys via Studio
+    "Strong proficiency in TypeScript",
+  ],
+}
+```
+
+**Helper function to generate keys:**
+
+```typescript
+function generateKey(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Use it when creating arrays:
+const items = data.map((item) => ({
+  _key: generateKey(),
+  ...item,
+}))
+```
+
+### Studio Setup Checklist
+
+| Step | Requirement | Common Mistake |
+|------|-------------|----------------|
+| Config location | `sanity.config.ts` at project root | Placing in `sanity/` folder |
+| basePath | `basePath: '/studio'` must match route | Forgetting this causes 404s |
+| Client component | `"use client"` directive needed | Server component won't render Studio |
+| Metadata | Don't export from client component | Causes build error |
+| Import path | Import from root config | Using `@/sanity/config` fails |
+
+**Correct Studio page pattern:**
+
+```typescript
+// app/studio/[[...index]]/page.tsx
+"use client";
+
+import { NextStudio } from "next-sanity/studio";
+import config from "../../../sanity.config";  // Import from root
+
+export default function StudioPage() {
+  return (
+    <div style={{ marginTop: "80px" }}>  // Avoid header overlap
+      <NextStudio config={config} />
+    </div>
+  );
+}
+```
+
+### Schema Migration Gotchas
+
+| Issue | Cause | Prevention |
+|-------|--------|-------------|
+| **Array vs String mismatch** | Schema defines `array`, migration uses `string` | Verify schema types before migration |
+| **Missing field names** | Schema uses different names than migration | Match schema field names exactly |
+| **Slug format** | Migration uses string, schema expects object | Use `{ _type: "slug", current: "..." }` format |
+| **Portable Text vs Text** | Schema expects block array, data is string | Decide on content type upfront |
+
+**Slug format example:**
+
+```typescript
+// ❌ WRONG
+{ slug: "my-post" }
+
+// ✅ CORRECT
+{ slug: { _type: "slug", current: "my-post" } }
+```
 
 ---
 
@@ -1090,10 +2046,158 @@ To achieve B2 certification in this skill:
 
 ---
 
-**Version**: 1.3.0
-**Last Updated**: 2025-02-04
+**Version**: 1.6.0
+**Last Updated**: 2025-02-05
 **Proficiency Framework**: CEFR + Bloom's Taxonomy + DigComp
-**Progression**: A2 → A2 → B1 → B1 → B1 → B2 → B2 → B2
+**Progression**: A2 → A2 → B1 → B1 → B1 → B1.5 → B2 → B2 → B2
+
+## What's New (v1.6.0)
+
+### Major Addition: Troubleshooting & Debugging Guide
+- **NEW: Complete Troubleshooting Section** - Real-world issues and solutions from production:
+  - **Stale build cache** - Content showing old data after Sanity updates (delete `.next` directory)
+  - **Count mismatch** - Studio shows X items, frontend shows Y (clear webpack cache)
+  - **API returns wrong count** - Browser caching or stale build (add cache-busting query param)
+  - **Blog related posts empty** - Missing `fetchAllPosts()` function solution
+  - **Dummy data showing** - Hardcoded fallback data appearing instead of CMS data
+  - **TypeScript build errors** - Migration script type errors
+  - **Placeholder images missing** - Broken image links for missing assets
+
+### Debugging Methods
+- **NEW: 5-Step Debugging Protocol**:
+  1. Verify Studio Data (use Sanity Vision query)
+  2. Test API Endpoint Directly (use curl with cache-busting)
+  3. Add Debug Logging (console.log in API routes)
+  4. Check Browser Console (fetch logs)
+  5. Clear Caches (`.next`, node_modules)
+
+### Quick Debug Checklist
+- **NEW: 10-Point Debug Checklist** - Verify in order:
+  - Data visible in Sanity Studio?
+  - API endpoint returns correct data (curl test)?
+  - Browser console shows fetch success?
+  - `.next` cache cleared recently?
+  - Environment variables loaded correctly?
+  - Client configured with correct dataset?
+  - Query uses proper projections?
+  - Components use optional chaining for optional fields?
+  - Placeholder image fallbacks exist?
+  - Build runs without TypeScript errors?
+
+### Component-Level Troubleshooting
+- **NEW: Component Debug Flow** - What to check when component returns `null`:
+  - Is the API returning data?
+  - Is the component handling loading state?
+  - Is Sanity config valid?
+
+### Cache Strategy Issues
+- **NEW: Cache Problem Solutions**:
+  - Content not updating after CMS change → Check `useCdn: false`
+  - API returns stale data → Add `Cache-Control: no-store` headers
+  - Browser caching API responses → Add `?t=${Date.now()}` cache-busting
+  - Build includes old content → Delete `.next` and rebuild
+
+### Data Migration Verification
+- **NEW: 4-Step Migration Verification**:
+  1. Check Studio count
+  2. Verify via GROQ count query
+  3. Test array editing (no "Missing keys" error)
+  4. Verify references exist
+
+### Environment Variable Issues
+- **NEW: Env Var Troubleshooting Table** - Symptoms, checks, and fixes for:
+  - `projectId` is empty
+  - API returns 401
+  - Writes fail
+  - Studio won't load
+
+### Updated Common Pitfalls
+- **EXPANDED: Common Pitfalls** - Added 2 new entries at the top:
+  - **Stale `.next` cache** - Build cache holds old query results
+  - **Browser caching API** - Fetch returns cached responses
+
+## What's New (v1.5.0)
+
+### Major Addition: Complete Migration Guide
+- **EXPANDED: Phase 6.5 - Data Migration & Seeding** - Comprehensive 200+ line migration guide:
+  - Full migration script template with all helper functions
+  - Step-by-step migration guide (6 steps)
+  - Image handling strategies (3 options)
+  - Field type mapping reference (14 types with examples)
+  - Running migrations with dotenv-cli
+  - Assessment checklist
+
+### Image Handling Section
+- **NEW: Image Handling Strategies** - Complete guide for managing images in migrations:
+  - Option 1: Upload via Studio, reference by ID (Recommended)
+  - Option 2: Skip images initially, add later via Studio
+  - Option 3: Upload via API (Advanced method)
+  - Handling null/optional images in components
+  - Image helper function: `createImageRef(assetId)`
+  - Optional chaining patterns for safety
+
+### Expanded Field Type Mapping
+- **EXPANDED: Field Type Mapping** - Now includes 14 field types:
+  - All basic types (slug, string, text, boolean, number, datetime, date)
+  - Array types (strings, objects, references)
+  - Complex types (image, file, geopoint, block/Portable Text)
+  - Reference arrays and self-referencing
+  - Complete examples for each type
+
+### Portable Text Examples
+- **NEW: Portable Text Examples** - Complete Portable Text patterns:
+  - Simple paragraphs with text formatting (bold, italic)
+  - Headings (H1, H2, H3)
+  - Lists (bullet, numbered)
+  - Links with marks
+  - Full working code examples
+
+### Common Pitfalls (7 New Entries)
+- **EXPANDED: Common Pitfalls** - Added 7 new image-related pitfalls:
+  - Null image access errors (missing optional chaining)
+  - Missing alt text on images (accessibility)
+  - Image upload failures (size/format issues)
+  - Wrong image ref format (URL vs asset reference)
+  - Undefined optional fields (null/undefined handling)
+  - Date format errors (ISO 8601 requirements)
+  - Reference target missing (document dependencies)
+
+### Complete Migration Template
+- **NEW: Complete Migration Script** - Production-ready template with:
+  - Helper functions: `generateKey()`, `generateSlug()`, `createImageRef()`
+  - Example migrations: Blog Posts, Products, Team Members
+  - Error handling and logging
+  - Main function with proper sequencing
+  - Ready to copy and customize
+
+### Assessment Checklist
+- **NEW: Migration Assessment Checklist** - 5 checkpoints:
+  - Migration runs without errors
+  - Items appear in Sanity Studio
+  - Array items are editable (no "missing keys" error)
+  - Re-running migration updates existing items (idempotent)
+  - All field types match schema expectations
+
+## What's New (v1.4.0)
+
+- **NEW: Phase 6.5 - Data Migration & Seeding** - Initial data migration guide:
+  - Migration script template with Sanity client
+  - Critical `_key` pattern for array items
+  - Field type mapping reference
+  - Idempotent migrations with `createOrReplace`
+  - Slug format patterns
+- **EXPANDED: Common Pitfalls** - 8 critical pitfalls from production:
+  - Missing `_key` in arrays
+  - Wrong config location
+  - Missing `basePath`
+  - Metadata export errors
+  - Schema type mismatches
+  - Studio header overlap
+  - Slug format errors
+  - Portable Text vs Text confusion
+- **NEW: Array Key Pattern** - Helper function for unique keys
+- **NEW: Studio Setup Checklist** - Working Studio integration requirements
+- **NEW: Basic Field Type Mapping** - Initial reference table
 
 ## What's New (v1.3.0)
 

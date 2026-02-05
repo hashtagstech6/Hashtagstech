@@ -1,19 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
-import dynamic from "next/dynamic";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
 import "./globals.css";
-
-// Dynamically import Chat Widget for code splitting (FR-056)
-// T099 [P] Load chat widget using `next/dynamic` for code splitting
-const ChatWidget = dynamic(
-  () => import("@/components/widgets/chat-widget").then((mod) => mod.ChatWidget),
-  {
-    ssr: false,
-    loading: () => null,
-  }
-);
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -52,6 +39,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -61,29 +51,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={outfit.variable}>
-      <body className="min-h-screen flex flex-col">
-        {/* Skip link for accessibility */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
-        >
-          Skip to main content
-        </a>
-
-        {/* Header */}
-        <Header />
-
-        {/* Main Content */}
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-
-        {/* Footer */}
-        <Footer />
-
-        {/* Chat Widget (site-wide) */}
-        {/* T100 Add Chat Widget to `app/layout.tsx` for site-wide availability */}
-        <ChatWidget />
+      <body className="min-h-screen">
+        {children}
       </body>
     </html>
   );

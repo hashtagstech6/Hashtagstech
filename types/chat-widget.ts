@@ -41,20 +41,8 @@ export const defaultHashtagTechConfig: ChatWidgetConfig = {
   companyLogo: "/logo-horizontal.webp",
   primaryColor: "#F26B6B",
   agentName: "Sarah",
-  agentAvatar: "/images/agents/sarah.jpg",
+  agentAvatar: "", // Empty string triggers Bot icon fallback
   welcomeMessage: "Hi! How can I help you today?",
   enableVideoCall: false,
 };
 
-/**
- * Default Devmate Solutions chat configuration
- */
-export const defaultDevmateConfig: ChatWidgetConfig = {
-  companyName: "Devmate Solutions",
-  companyLogo: "/logo-horizontal.webp",
-  primaryColor: "#F26B6B",
-  agentName: "Alex",
-  agentAvatar: "/images/agents/alex.jpg",
-  welcomeMessage: "Welcome to Devmate Solutions! How can we assist you?",
-  enableVideoCall: false,
-};

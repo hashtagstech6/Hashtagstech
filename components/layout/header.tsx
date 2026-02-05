@@ -108,7 +108,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:items-center md:space-x-8">
+            <div className="hidden lg:flex lg:items-center lg:space-x-8">
               {navigation.map((item, index) => (
                 <motion.div
                   key={item.name}
@@ -145,7 +145,7 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="md:inline-flex md:hidden p-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 z-[1000] relative"
+              className="inline-flex lg:hidden p-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 z-[1000] relative"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
@@ -163,31 +163,32 @@ export default function Header() {
                 initial="closed"
                 animate={isMobileMenuOpen ? "open" : "closed"}
               >
-                <motion.line
-                  x1="4" y1="6" x2="20" y2="6"
+                {/* Top Line / First Cross Arm */}
+                <motion.path
                   variants={{
-                    closed: { rotate: 0, y: 0 },
-                    open: { rotate: 45, y: 6 }
+                    closed: { d: "M4 6L20 6" },
+                    open: { d: "M6 6L18 18" }
                   }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  style={{ transformOrigin: "center" }}
+                  transition={{ duration: 0.3 }}
                 />
-                <motion.line
-                  x1="4" y1="12" x2="20" y2="12"
+                
+                {/* Middle Line (Fades out) */}
+                <motion.path
+                  d="M4 12L20 12"
                   variants={{
                     closed: { opacity: 1 },
                     open: { opacity: 0 }
                   }}
                   transition={{ duration: 0.2 }}
                 />
-                <motion.line
-                  x1="4" y1="18" x2="20" y2="18"
+
+                {/* Bottom Line / Second Cross Arm */}
+                <motion.path
                   variants={{
-                    closed: { rotate: 0, y: 0 },
-                    open: { rotate: -45, y: -6 }
+                    closed: { d: "M4 18L20 18" },
+                    open: { d: "M6 18L18 6" }
                   }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  style={{ transformOrigin: "center" }}
+                  transition={{ duration: 0.3 }}
                 />
               </motion.svg>
             </button>

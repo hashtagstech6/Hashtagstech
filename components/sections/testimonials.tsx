@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Testimonials Section Component
@@ -64,7 +65,7 @@ export default function Testimonials() {
   useEffect(() => {
     async function fetchTestimonials() {
       try {
-        const response = await fetch("/api/clients?featured=true");
+        const response = await fetch("/api/clients");
         if (!response.ok) throw new Error("Failed to fetch testimonials");
         const data = await response.json();
         setTestimonials(data);
@@ -77,21 +78,27 @@ export default function Testimonials() {
     fetchTestimonials();
   }, []);
 
-  // Get current testimonial
-  const currentTestimonial = testimonials[currentIndex] ?? testimonials[0] ?? {
-    _id: "1",
-    name: "Sarah Johnson",
-    company: "Procope AI",
-    role: "CTO",
-    rating: 5,
-    quote: "Hashtag Tech delivered exceptional AI solutions that transformed our business operations.",
-  };
+  // Get current testimonial - no fallback dummy data
+  const currentTestimonial = testimonials[currentIndex] ?? testimonials[0];
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (loading || testimonials.length === 0 || isHovered) return;
+
+    const timer = setInterval(() => {
+      nextTestimonial();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [currentIndex, isHovered, loading, testimonials.length]); // Depend on currentIndex to reset timer on manual change
 
   // Variants for sliding animation
   const variants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0,
+      x: direction > 0 ? "100%" : "-100%",
+      opacity: 1,
     }),
     center: {
       zIndex: 1,
@@ -100,8 +107,8 @@ export default function Testimonials() {
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 100 : -100,
-      opacity: 0,
+      x: direction < 0 ? "100%" : "-100%",
+      opacity: 1,
     }),
   };
 
@@ -125,8 +132,8 @@ export default function Testimonials() {
     return Math.abs(offset) * velocity;
   };
 
-  if (loading) {
-    return null; // Or show a loading skeleton
+  if (loading || testimonials.length === 0) {
+    return null;
   }
 
   // Map client data to testimonial format
@@ -145,6 +152,8 @@ export default function Testimonials() {
       id="testimonials"
       className="section-testimonials py-20 overflow-hidden" // Added overflow-hidden
       aria-labelledby="testimonials-heading"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="container mx-auto px-4">
         {/* ... Header ... */}
@@ -172,74 +181,75 @@ export default function Testimonials() {
             </button>
 
             {/* Testimonial Content - Animated */}
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.div
-                key={currentIndex}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
-                onDragEnd={(_, { offset, velocity }) => {
-                  const swipe = swipePower(offset.x, velocity.x);
+            <div className="absolute inset-0 overflow-hidden">
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                  }}
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={1}
+                  onDragEnd={(_, { offset, velocity }) => {
+                    const swipe = swipePower(offset.x, velocity.x);
 
-                  if (swipe < -swipeConfidenceThreshold) {
-                    nextTestimonial();
-                  } else if (swipe > swipeConfidenceThreshold) {
-                    prevTestimonial();
-                  }
-                }}
-                className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 md:px-20 cursor-grab active:cursor-grabbing"
-              >
-                {/* Image - Left Side */}
-                <div className="flex-shrink-0 select-none">
-                  <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
-                    <Image
-                      src={displayTestimonial.image}
-                      alt={displayTestimonial.clientName}
-                      fill
-                      className="object-cover"
-                      draggable={false}
-                    />
-                  </div>
-                </div>
-
-                {/* Content - Right Side */}
-                <div className="flex-1 text-center md:text-left select-none">
-                  {/* Star Rating */}
-                  <div className="flex justify-center md:justify-start mb-6">
-                    <StarRating rating={displayTestimonial.rating} />
+                    if (swipe < -swipeConfidenceThreshold) {
+                      nextTestimonial();
+                    } else if (swipe > swipeConfidenceThreshold) {
+                      prevTestimonial();
+                    }
+                  }}
+                  className="absolute inset-0 flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 md:px-20 cursor-grab active:cursor-grabbing"
+                >
+                  {/* Image - Left Side */}
+                  <div className="flex-shrink-0 select-none">
+                    <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
+                      <Image
+                        src={displayTestimonial.image}
+                        alt={displayTestimonial.clientName}
+                        fill
+                        className="object-cover"
+                        draggable={false}
+                      />
+                    </div>
                   </div>
 
-                  {/* Quote */}
-                  <blockquote className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed mb-8">
-                    "{displayTestimonial.quote}"
-                  </blockquote>
+                  {/* Content - Right Side */}
+                  <div className="flex-1 text-center md:text-left select-none">
+                    {/* Star Rating */}
+                    <div className="flex justify-center md:justify-start mb-6">
+                      <StarRating rating={displayTestimonial.rating} />
+                    </div>
 
-                  {/* Client Info */}
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">
-                      {displayTestimonial.clientName}
-                    </h3>
-                    <p className="text-sm text-white/60 font-medium">
-                      {displayTestimonial.clientTitle}
-                      {displayTestimonial.clientCompany && (
-                        <span className="opacity-70">
-                          , {displayTestimonial.clientCompany}
-                        </span>
-                      )}
-                    </p>
+                    {/* Quote */}
+                    <blockquote className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed mb-8">
+                      "{displayTestimonial.quote}"
+                    </blockquote>
+
+                    {/* Client Info */}
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">
+                        {displayTestimonial.clientName}
+                      </h3>
+                      <p className="text-sm text-white/60 font-medium">
+                        {displayTestimonial.clientTitle}
+                        {displayTestimonial.clientCompany && (
+                          <span className="opacity-70">
+                            , {displayTestimonial.clientCompany}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+            </div>
             
             {/* Dots Indicator - pushed down to not overlap absolute content */}
             <div className="absolute -bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">

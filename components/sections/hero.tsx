@@ -7,6 +7,7 @@ import MagneticButton from "@/components/ui/magnetic-button";
 import TiltCard from "@/components/ui/tilt-card";
 import gsap from "gsap";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Hero Section Component
@@ -30,6 +31,7 @@ export default function Hero() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Typing effect for rotating words
   useEffect(() => {
@@ -132,10 +134,14 @@ export default function Hero() {
                     src="/images/hero-team.png"
                     alt="Hashtag Tech team illustration"
                     fill
-                    className="object-contain"
+                    className={`object-contain transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority
+                    onLoad={() => setIsLoading(false)}
                   />
+                  {isLoading && (
+                    <Skeleton className="absolute inset-0 w-full h-full rounded-2xl bg-muted z-10" />
+                  )}
                 </div>
               </TiltCard>
             </div>

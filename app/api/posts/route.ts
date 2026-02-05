@@ -57,15 +57,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 10;
     const category = searchParams.get("category");
-    const featured = searchParams.get("featured");
 
     // Build GROQ query with filters
     let filters = "";
     if (category) {
       filters += ` && $category in categories[]->slug.current`;
-    }
-    if (featured === "true") {
-      filters += ` && featured == true`;
     }
 
     const query = `
@@ -100,7 +96,6 @@ export async function GET(request: Request) {
           color
         },
         publishedAt,
-        featured,
         seoTitle,
         seoDescription
       }
@@ -108,7 +103,11 @@ export async function GET(request: Request) {
 
     const params = category ? { category } : undefined;
 
+    console.log("[API /api/posts] Fetching posts...");
+
     const posts = await client.fetch(query, params);
+
+    console.log("[API /api/posts] Fetched:", posts.length, "posts");
 
     return NextResponse.json(posts, {
       headers: {
@@ -116,7 +115,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error fetching posts:", error);
+    console.error("[API /api/posts] Error:", error);
     return NextResponse.json(
       { error: "Failed to fetch posts" },
       { status: 500 }

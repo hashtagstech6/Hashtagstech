@@ -34,7 +34,7 @@ export interface Author {
  */
 export interface Category {
   id: string;
-  name: string;
+  name?: string; // Can be undefined from Sanity
   slug: string;
 }
 

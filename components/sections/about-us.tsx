@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, Zap, MessageSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 import TiltCard from "@/components/ui/tilt-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * About Us Section Component
@@ -43,6 +44,7 @@ const aboutBenefits = [
 
 export default function AboutUs() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <section
@@ -77,8 +79,12 @@ export default function AboutUs() {
                     src="/images/about-team.png"
                     alt="About Hashtag Tech"
                     fill
-                    className="object-contain md:p-8"
+                    className={`object-contain md:p-8 transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                    onLoad={() => setIsLoading(false)}
                   />
+                  {isLoading && (
+                    <Skeleton className="absolute inset-0 w-full h-full bg-muted z-10" />
+                  )}
                 </div>
               </TiltCard>
             </div>

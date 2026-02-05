@@ -5,12 +5,10 @@ import { validateSanityConfig } from "@/sanity/env";
 /**
  * GET /api/success-stories
  *
- * Fetch all success stories with ISR caching.
+ * Fetch all success stories with ISR caching (Simplified).
  *
  * Query Parameters:
  * - limit: number of stories to return (optional, default: 10)
- * - featured: filter for featured stories only (optional: true/false)
- * - industry: filter by industry (optional)
  *
  * Caching:
  * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
@@ -18,7 +16,11 @@ import { validateSanityConfig } from "@/sanity/env";
  */
 export async function GET(request: Request) {
   const config = validateSanityConfig();
+
+  console.log("[API /api/success-stories] Config check:", config);
+
   if (!config.valid) {
+    console.error("[API /api/success-stories] Invalid config:", config.error);
     return NextResponse.json(
       { error: config.error || "Sanity configuration error" },
       { status: 500 }
@@ -27,6 +29,7 @@ export async function GET(request: Request) {
 
   const client = getClient();
   if (!client) {
+    console.error("[API /api/success-stories] Client is null");
     return NextResponse.json(
       { error: "Sanity client not configured" },
       { status: 500 }
@@ -36,25 +39,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 10;
-    const featured = searchParams.get("featured");
-    const industry = searchParams.get("industry");
-
-    let filters = "";
-    if (featured === "true") {
-      filters += ` && featured == true`;
-    }
-    if (industry) {
-      filters += ` && industry == $industry`;
-    }
 
     const query = `
-      *[_type == "successStory"${filters}] | order(order asc)[0...${limit}] {
+      *[_type == "successStory" && (isActive == true || defined(isActive) == false)] | order(order asc)[0...${limit}] {
         _id,
-        title,
-        "slug": slug.current,
-        clientName,
         clientCompany,
-        industry,
+        country,
         featuredImage {
           asset-> {
             _id,
@@ -63,17 +53,15 @@ export async function GET(request: Request) {
           alt
         },
         excerpt,
-        challenge,
-        solution,
-        results,
-        projectDate,
-        services,
-        featured
+        order
       }
     `;
 
-    const params = industry ? { industry } : undefined;
-    const stories = await client.fetch(query, params);
+    console.log("[API /api/success-stories] Fetching with query:", query.replace(/\s+/g, ' '));
+
+    const stories = await client.fetch(query);
+
+    console.log("[API /api/success-stories] Fetched stories:", stories.length, stories);
 
     return NextResponse.json(stories, {
       headers: {
@@ -81,9 +69,9 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error fetching success stories:", error);
+    console.error("[API /api/success-stories] Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch success stories" },
+      { error: "Failed to fetch success stories", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

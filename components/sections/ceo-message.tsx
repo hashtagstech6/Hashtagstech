@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Facebook, Linkedin, Instagram, Github, Youtube, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 import TiltCard from "@/components/ui/tilt-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CeoMessage() {
+  const [isLoading, setIsLoading] = useState(true);
   return (
     <section className="py-20 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -25,9 +27,13 @@ export default function CeoMessage() {
                             src="/images/ceo-portrait.png"
                             alt="Kamran Khan - CEO"
                             fill
-                            className="object-cover object-top"
+                            className={`object-cover object-top transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                             priority
+                            onLoad={() => setIsLoading(false)}
                         />
+                        {isLoading && (
+                            <Skeleton className="absolute inset-0 w-full h-full bg-muted z-10" />
+                        )}
                     </div>
                   </div>
                 </TiltCard>

@@ -1,13 +1,8 @@
 /**
- * Success Story Schema
+ * Success Story Schema (Simplified)
  *
- * Sanity schema for success stories/case studies with:
- * - Title and slug
- * - Client name and company
- * - Featured image
- * - Excerpt and full content
- * - Results/metrics
- * - Category
+ * Sanity schema for success stories/case studies.
+ * Only contains fields that are actually used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -19,52 +14,21 @@ export const successStoryType = defineType({
   type: "document",
   icon: DocumentIcon,
   fields: [
-    // Title - required for display
-    defineField({
-      name: "title",
-      type: "string",
-      validation: (Rule) => Rule.required().error("Title is required"),
-    }),
-
-    // Slug - auto-generated from title
-    defineField({
-      name: "slug",
-      type: "slug",
-      options: { source: "title" },
-      validation: (Rule) => Rule.required().error("Slug is required"),
-    }),
-
-    // Client Name
-    defineField({
-      name: "clientName",
-      type: "string",
-      validation: (Rule) => Rule.required().error("Client name is required"),
-    }),
-
-    // Client Company
+    // Client Company Name
     defineField({
       name: "clientCompany",
       type: "string",
-      validation: (Rule) => Rule.required().error("Client company is required"),
+      validation: (Rule) => Rule.required().error("Client company name is required"),
     }),
 
-    // Industry
+    // Country (for display after company name)
     defineField({
-      name: "industry",
+      name: "country",
       type: "string",
-      options: {
-        list: [
-          { title: "Technology", value: "technology" },
-          { title: "Finance", value: "finance" },
-          { title: "Healthcare", value: "healthcare" },
-          { title: "E-commerce", value: "ecommerce" },
-          { title: "Education", value: "education" },
-          { title: "Other", value: "other" },
-        ],
-      },
+      description: "Country code or name to display after company name (e.g., 'USA', 'UK', 'UAE')",
     }),
 
-    // Featured image with hotspot and alt text
+    // Featured Image
     defineField({
       name: "featuredImage",
       type: "image",
@@ -73,94 +37,25 @@ export const successStoryType = defineType({
         {
           name: "alt",
           type: "string",
-          title: "Alternative Text",
-          validation: (Rule) => Rule.required().error("Alt text is required for accessibility"),
+          validation: (Rule) => Rule.required().error("Alt text is required"),
         },
       ],
+      validation: (Rule) => Rule.required().error("Featured image is required"),
     }),
 
-    // Excerpt - short summary for cards
+    // Excerpt/Summary
     defineField({
       name: "excerpt",
       type: "text",
       rows: 3,
-      validation: (Rule) =>
-        Rule.required()
-          .min(50)
-          .max(300)
-          .error("Excerpt must be between 50 and 300 characters"),
+      validation: (Rule) => Rule.required().min(10).error("Excerpt must be at least 10 characters"),
     }),
 
-    // Content - Portable Text for full case study
+    // Active flag
     defineField({
-      name: "content",
-      type: "array",
-      of: [{ type: "block" }],
-    }),
-
-    // Challenge
-    defineField({
-      name: "challenge",
-      type: "text",
-      rows: 3,
-      description: "The client's challenge or problem",
-    }),
-
-    // Solution
-    defineField({
-      name: "solution",
-      type: "text",
-      rows: 3,
-      description: "How Hashtag Tech solved the problem",
-    }),
-
-    // Results - key metrics/outcomes
-    defineField({
-      name: "results",
-      type: "array",
-      of: [
-        defineField({
-          name: "result",
-          type: "object",
-          fields: [
-            { name: "metric", type: "string", title: "Metric (e.g., '50% increase')" },
-            { name: "label", type: "string", title: "Label (e.g., 'in conversion')" },
-          ],
-        }),
-      ],
-    }),
-
-    // Project Date
-    defineField({
-      name: "projectDate",
-      type: "date",
-    }),
-
-    // Services Used - for categorization
-    defineField({
-      name: "services",
-      type: "array",
-      of: [
-        defineField({
-          name: "service",
-          type: "string",
-          options: {
-            list: [
-              { title: "Web Development", value: "web-development" },
-              { title: "App Development", value: "app-development" },
-              { title: "AI Solutions", value: "ai-solutions" },
-              { title: "Digital Marketing", value: "digital-marketing" },
-            ],
-          },
-        }),
-      ],
-    }),
-
-    // Featured flag for highlighting success stories
-    defineField({
-      name: "featured",
+      name: "isActive",
       type: "boolean",
-      initialValue: false,
+      initialValue: true,
     }),
 
     // Display order
@@ -174,16 +69,15 @@ export const successStoryType = defineType({
   // Preview in Studio list view
   preview: {
     select: {
-      title: "title",
-      clientName: "clientName",
       clientCompany: "clientCompany",
+      country: "country",
       media: "featuredImage",
     },
     prepare(selection) {
-      const { title, clientName, clientCompany, media } = selection;
+      const { clientCompany, country, media } = selection;
       return {
-        title,
-        subtitle: `${clientName} - ${clientCompany}`,
+        title: clientCompany,
+        subtitle: country ? `${country} - Success Story` : "Success Story",
         media,
       };
     },

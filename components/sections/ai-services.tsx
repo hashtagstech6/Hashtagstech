@@ -5,6 +5,7 @@ import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AIService {
   _id: string;
@@ -44,7 +45,35 @@ export default function AIServices() {
   }, []);
 
   if (loading) {
-    return null; // Or show a loading skeleton
+    return (
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 space-y-4">
+             <Skeleton className="h-4 w-48 mx-auto bg-primary/20" />
+             <Skeleton className="h-12 w-3/4 md:w-1/2 mx-auto" />
+          </div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-full flex flex-col space-y-6 p-6 rounded-lg bg-background border border-border/50">
+                 <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-8 w-8 rounded ml-auto" />
+                 </div>
+                 <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                 </div>
+                 <div className="space-y-3 pt-2">
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-3/4" />
+                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (

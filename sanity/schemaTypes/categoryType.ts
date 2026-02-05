@@ -1,8 +1,8 @@
 /**
- * Category Schema
+ * Category Schema (Simplified)
  *
  * Sanity schema for blog post categories.
- * Categories organize blog posts by topic.
+ * Only contains fields that are actually fetched and used on the frontend.
  */
 
 import { defineType, defineField } from "sanity";
@@ -14,26 +14,19 @@ export const categoryType = defineType({
   type: "document",
   icon: TagIcon,
   fields: [
-    // Name - required
+    // Name
     defineField({
       name: "name",
       type: "string",
       validation: (Rule) => Rule.required().error("Category name is required"),
     }),
 
-    // Slug - auto-generated from name
+    // Slug
     defineField({
       name: "slug",
       type: "slug",
       options: { source: "name" },
       validation: (Rule) => Rule.required().error("Slug is required"),
-    }),
-
-    // Description
-    defineField({
-      name: "description",
-      type: "text",
-      rows: 2,
     }),
 
     // Color for category badges
@@ -49,14 +42,13 @@ export const categoryType = defineType({
   preview: {
     select: {
       name: "name",
-      description: "description",
       color: "color",
     },
     prepare(selection) {
-      const { name, description } = selection;
+      const { name } = selection;
       return {
         title: name,
-        subtitle: description || "Category",
+        subtitle: "Category",
       };
     },
   },

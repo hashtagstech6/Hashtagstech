@@ -37,21 +37,17 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = Number(searchParams.get("limit")) || 50;
     const department = searchParams.get("department");
-    const featured = searchParams.get("featured");
 
-    let filters = "&& isActive == true";
+    // Handle documents without isActive field (older documents)
+    let filters = "&& (isActive == true || defined(isActive) == false)";
     if (department) {
       filters += ` && department == $department`;
-    }
-    if (featured === "true") {
-      filters += ` && featured == true`;
     }
 
     const query = `
       *[_type == "teamMember"${filters}] | order(order asc)[0...${limit}] {
         _id,
         name,
-        "slug": slug.current,
         role,
         department,
         photo {
@@ -61,13 +57,14 @@ export async function GET(request: Request) {
           },
           alt
         },
-        bio,
+        image {
+          asset-> {
+            _id,
+            url
+          },
+          alt
+        },
         skills,
-        email,
-        linkedinUrl,
-        twitterUrl,
-        githubUrl,
-        featured,
         order
       }
     `;
@@ -75,13 +72,15 @@ export async function GET(request: Request) {
     const params = department ? { department } : undefined;
     const teamMembers = await client.fetch(query, params);
 
+    console.log("[API /api/team] Fetched team members:", teamMembers.length);
+
     return NextResponse.json(teamMembers, {
       headers: {
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
       },
     });
   } catch (error) {
-    console.error("Error fetching team members:", error);
+    console.error("[API /api/team] Error fetching team members:", error);
     return NextResponse.json(
       { error: "Failed to fetch team members" },
       { status: 500 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Heading from "@/components/ui/heading";
-import { Button } from "@/components/ui/button";
+import MagneticButton from "@/components/ui/magnetic-button";
 import { Home, Search } from "lucide-react";
 
 /**
@@ -29,23 +29,15 @@ export default function NotFound() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            asChild
-            variant="default"
-            className="flex items-center gap-2"
-          >
+          <MagneticButton href="/" variant="primary">
             <Home className="w-4 h-4" />
             Go home
-          </Button>
+          </MagneticButton>
 
-          <Button
-            asChild
-            variant="outline"
-            className="flex items-center gap-2"
-          >
+          <MagneticButton href="/#services" variant="outline">
             <Search className="w-4 h-4" />
-            Search our site
-          </Button>
+            View Services
+          </MagneticButton>
         </div>
 
         {/* Helpful Links */}

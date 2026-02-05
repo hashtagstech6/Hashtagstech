@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { X, MessageCircle, Video, Minimize2, Send } from "lucide-react";
+import { X, MessageCircle, Video, Minimize2, Send, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ChatWidgetConfig, ChatMessage } from "@/types/chat-widget";
 import { defaultHashtagTechConfig } from "@/types/chat-widget";
@@ -339,26 +339,30 @@ function MessageBubble({
   return (
     <div className={cn("flex gap-3", isAgent ? "flex-row" : "flex-row-reverse")}>
       {/* Avatar */}
-    {isAgent && (
-      <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-        <Image src={agentAvatar} alt="Agent" fill className="object-cover" />
-      </div>
-    )}
-
-    {/* Message */}
-    <div
-      className={cn(
-        "max-w-[75%] px-4 py-2 rounded-2xl",
-        isAgent
-          ? "bg-blue-100 text-gray-900 rounded-tl-none"
-          : "text-white rounded-tr-none",
-        isAgent ? "" : "shadow-md"
+      {isAgent && (
+        <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center border border-gray-200">
+           {agentAvatar && agentAvatar !== "" && !agentAvatar.includes("sarah.jpg") ? (
+             <Image src={agentAvatar} alt="Agent" fill className="object-cover" />
+           ) : (
+             <Bot className="w-5 h-5 text-gray-600" />
+           )}
+        </div>
       )}
-      style={isAgent ? {} : { backgroundColor: agentColor }}
-    >
-      <p className="text-sm">{message.content}</p>
+
+      {/* Message */}
+      <div
+        className={cn(
+          "max-w-[75%] px-4 py-2 rounded-2xl",
+          isAgent
+            ? "bg-blue-100 text-gray-900 rounded-tl-none"
+            : "text-white rounded-tr-none",
+          isAgent ? "" : "shadow-md"
+        )}
+        style={isAgent ? {} : { backgroundColor: agentColor }}
+      >
+        <p className="text-sm">{message.content}</p>
+      </div>
     </div>
-  </div>
   );
 }
 

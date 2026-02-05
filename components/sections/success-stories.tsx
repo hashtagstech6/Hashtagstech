@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import MagneticButton from "@/components/ui/magnetic-button";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Success Stories Section Component
@@ -15,22 +16,13 @@ import { cn } from "@/lib/utils";
 
 interface SuccessStory {
   _id: string;
-  title: string;
-  slug: string;
-  clientName: string;
   clientCompany: string;
   country?: string;
-  industry?: string;
   featuredImage?: {
     asset?: { url?: string };
     alt?: string;
   };
   excerpt?: string;
-  challenge?: string;
-  solution?: string;
-  results?: Array<{ metric: string; label: string }>;
-  featured?: boolean;
-  order?: number;
 }
 
 export default function SuccessStories() {
@@ -44,12 +36,15 @@ export default function SuccessStories() {
   useEffect(() => {
     async function fetchStories() {
       try {
-        const response = await fetch("/api/success-stories?featured=true");
+        console.log("[SuccessStories] Fetching from API...");
+        const response = await fetch("/api/success-stories");
         if (!response.ok) throw new Error("Failed to fetch success stories");
         const data = await response.json();
-        setStories(data);
-      } catch (error) {
-        console.error("Error fetching success stories:", error);
+        console.log("[SuccessStories] API response:", data);
+
+        setStories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("[SuccessStories] Error fetching:", err);
       } finally {
         setLoading(false);
       }
@@ -57,23 +52,52 @@ export default function SuccessStories() {
     fetchStories();
   }, []);
 
+
   const toggleMobile = (id: string) => {
     setExpandedClient(expandedClient === id ? null : id);
   };
 
   if (loading) {
-    return null; // Or show a loading skeleton
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <Skeleton className="h-4 w-32 mb-6 opacity-50" />
+          <div className="space-y-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="py-6 border-b border-border/30">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 w-full">
+                       <Skeleton className="h-10 w-2/3 md:w-1/3" />
+                       <Skeleton className="h-6 w-12 rounded-full opacity-50 hidden md:block" />
+                    </div>
+                    <Skeleton className="h-6 w-6 rounded-full md:hidden" />
+                 </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12 flex justify-center">
+             <Skeleton className="h-12 w-40 rounded-full" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (stories.length === 0) {
+    return null;
   }
 
   // Map success stories to client format for display
   const clients = stories.map(story => ({
     id: story._id,
     name: story.clientCompany,
-    country: story.country || "Global",
+    country: story.country || "",
     description: story.excerpt || "",
     imageUrl: story.featuredImage?.asset?.url || "/placeholder.svg",
     alt: story.featuredImage?.alt || `${story.clientCompany} project`,
   }));
+
+  console.log("[SuccessStories] Rendering clients:", clients.length);
 
   return (
     <section
@@ -105,9 +129,11 @@ export default function SuccessStories() {
                 {/* Heading */}
                 <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground flex-1">
                   {client.name}
-                  <span className="text-base md:text-lg font-normal text-muted-foreground ml-2 uppercase">
-                    {client.country}
-                  </span>
+                  {client.country && (
+                    <span className="text-base md:text-lg font-normal text-muted-foreground ml-2 uppercase">
+                      {client.country}
+                    </span>
+                  )}
                 </h3>
 
                 {/* Mobile expand icon */}
@@ -134,6 +160,7 @@ export default function SuccessStories() {
                       alt={client.alt}
                       fill
                       className="object-cover"
+                      unoptimized={client.imageUrl?.startsWith('https://') ?? false}
                     />
                   </div>
                 </div>
@@ -152,6 +179,7 @@ export default function SuccessStories() {
                     alt={client.alt}
                     fill
                     className="object-cover"
+                    unoptimized={client.imageUrl?.startsWith('https://') ?? false}
                   />
                 </div>
               </div>
