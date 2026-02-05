@@ -26,7 +26,8 @@ interface TeamMember {
 
 async function getTeamMembers(): Promise<TeamMember[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/team`, {
+    // Use relative URL for internal API calls (works in dev and production)
+    const response = await fetch("/api/team", {
       cache: 'force-cache', // Use cache for ISR
     });
     if (!response.ok) return [];

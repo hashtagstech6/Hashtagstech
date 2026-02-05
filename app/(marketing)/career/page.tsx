@@ -63,7 +63,8 @@ async function fetchCareers(): Promise<SanityCareer[]> {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
+    // Use relative URL for internal API calls (works in dev and production)
+    const response = await fetch("/api/careers", {
       next: { revalidate: 300 },
     });
 
