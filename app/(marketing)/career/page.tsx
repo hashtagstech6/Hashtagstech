@@ -92,10 +92,6 @@ async function fetchCareers(): Promise<SanityCareer[]> {
 export default async function CareerPage() {
   const careers = await fetchCareers();
 
-  if (careers.length === 0) {
-    return null;
-  }
-
   return (
     <>
       <Header />
@@ -112,11 +108,19 @@ export default async function CareerPage() {
         {/* Job Listings */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto space-y-6">
-              {careers.map((career) => (
-                <CareerCard key={career._id} career={career} />
-              ))}
-            </div>
+            {careers.length > 0 ? (
+              <div className="max-w-4xl mx-auto space-y-6">
+                {careers.map((career) => (
+                  <CareerCard key={career._id} career={career} />
+                ))}
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto text-center py-16">
+                <p className="text-lg text-muted-foreground">
+                  No open positions at the moment. Please check back soon!
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

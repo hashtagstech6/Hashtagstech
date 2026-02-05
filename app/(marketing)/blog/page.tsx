@@ -103,26 +103,20 @@ async function fetchBlogPosts(): Promise<SanityBlogPost[]> {
 export default async function BlogPage() {
   const posts = await fetchBlogPosts();
 
-  if (posts.length === 0) {
-    return null;
-  }
-
   return (
-    <>
+    <main className="min-h-screen">
+      {/* Page Header */}
+      <PageHeader
+        title="Our Blog"
+        description="Insights, tutorials, and thoughts on AI, web development, and technology trends from our expert team."
+        pill="Blog & Insights"
+        breadcrumb={[{ label: "Blog" }]}
+      />
 
-
-      <main className="min-h-screen">
-        {/* Page Header */}
-        <PageHeader
-          title="Our Blog"
-          description="Insights, tutorials, and thoughts on AI, web development, and technology trends from our expert team."
-          pill="Blog & Insights"
-          breadcrumb={[{ label: "Blog" }]}
-        />
-
-        {/* Blog Posts Grid */}
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container mx-auto px-4">
+      {/* Blog Posts Grid */}
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container mx-auto px-4">
+          {posts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {posts.map((post) => {
                 const adaptedPost = {
@@ -149,9 +143,15 @@ export default async function BlogPage() {
                 return <BlogCard key={post._id} post={adaptedPost} />;
               })}
             </div>
-          </div>
-        </section>
-      </main>
-    </>
+          ) : (
+            <div className="max-w-4xl mx-auto text-center py-16">
+              <p className="text-lg text-muted-foreground">
+                No blog posts yet. Check back soon!
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }

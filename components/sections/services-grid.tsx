@@ -125,7 +125,7 @@ function ServiceColumn({ service, index }: { service: Service; index: number }) 
 
       {/* CTA Button - Outlined for sides, filled for middle */}
       <MagneticButton
-        href={`/services/${service.slug}`}
+        href="/contact"
         variant={service.ctaStyle === "primary" || index === 1 || index === 4 ? "primary" : "outline"}
         className="rounded-full w-fit"
       >
