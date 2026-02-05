@@ -49,7 +49,8 @@ export async function generateStaticParams() {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers`, {
+    // Use relative URL for internal API calls (works in dev and production)
+    const response = await fetch("/api/careers", {
       next: { revalidate: 300 },
     });
 
@@ -77,10 +78,10 @@ async function fetchCareer(slug: string): Promise<SanityCareer | null> {
   }
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/careers/${slug}`,
-      { next: { revalidate: 300 } }
-    );
+    // Use relative URL for internal API calls (works in dev and production)
+    const response = await fetch(`/api/careers/${slug}`, {
+      next: { revalidate: 300 }
+    });
 
     if (response.ok) {
       return await response.json();
