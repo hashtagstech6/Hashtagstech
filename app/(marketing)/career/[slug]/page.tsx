@@ -22,7 +22,7 @@ interface SanityCareer {
   department: string;
   location: string;
   type: "Full-time" | "Part-time" | "Contract" | "Remote";
-  description: any;
+  description: any; // Portable Text array
   requirements: string[];
   benefits: string[];
   salary?: {

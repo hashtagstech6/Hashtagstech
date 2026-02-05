@@ -69,11 +69,11 @@ export const careerType = defineType({
       validation: (Rule) => Rule.required().error("Employment type is required"),
     }),
 
-    // Job Description
+    // Job Description (Portable Text for rich text)
     defineField({
       name: "description",
-      type: "text",
-      rows: 10,
+      type: "array",
+      of: [{ type: "block" }],
       validation: (Rule) => Rule.required().error("Job description is required"),
     }),
 
