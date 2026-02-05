@@ -1,5 +1,3 @@
-"use client"; // Not needed if server component, but we'll see. Actually TeamList will be server component.
-
 import Image from "next/image";
 
 interface TeamMember {
