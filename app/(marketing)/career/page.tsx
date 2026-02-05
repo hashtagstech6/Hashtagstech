@@ -1,12 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import Header from "@/components/layout/header";
 import PageHeader from "@/components/layout/page-header";
 import { formatDate } from "@/lib/utils";
 import { MapPin, Briefcase, DollarSign, ArrowRight } from "lucide-react";
-import { validateSanityConfig } from "@/sanity/env";
+import { getClient } from "@/sanity/lib/client";
 
-// Type for Sanity career from API
+// Type for Sanity career
 interface SanityCareer {
   _id: string;
   title: string;
@@ -14,7 +13,7 @@ interface SanityCareer {
   department: string;
   location: string;
   type: "Full-time" | "Part-time" | "Contract" | "Remote";
-  description: any; // Portable Text
+  description: any;
   requirements: string[];
   benefits: string[];
   salary?: {
@@ -48,54 +47,67 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Revalidation time for ISR (300 seconds = 5 minutes)
- * T086 [US6] Implement ISR with 300-second revalidation on career listing page
  */
 export const revalidate = 300;
 
 /**
- * Fetch careers from Sanity API
+ * Career Listing Page Component
+ *
+ * Fetches careers directly from Sanity CMS (server-side).
  */
-async function fetchCareers(): Promise<SanityCareer[]> {
-  const config = validateSanityConfig();
+export default async function CareerPage() {
+  const client = getClient();
 
-  if (!config.valid) {
-    return [];
+  if (!client) {
+    return (
+      <main className="min-h-screen">
+        <PageHeader
+          title="Join Our Team"
+          description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
+          pill="Careers"
+          breadcrumb={[{ label: "Career" }]}
+        />
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center py-16">
+              <p className="text-lg text-muted-foreground">
+                Career information not available.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   try {
-    // Use relative URL for internal API calls (works in dev and production)
-    const response = await fetch("/api/careers", {
-      next: { revalidate: 300 },
-    });
+    const query = `
+      *[_type == "career" && isActive == true] | order(publishedAt desc) {
+        _id,
+        title,
+        "slug": slug.current,
+        department,
+        location,
+        type,
+        description,
+        requirements,
+        benefits,
+        salary {
+          min,
+          max,
+          currency,
+          period
+        },
+        isActive,
+        publishedAt,
+        applicationUrl,
+        applicationEmail
+      }
+    `;
 
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch (error) {
-    console.error("Failed to fetch from Sanity API:", error);
-  }
+    const careers = await client.fetch<SanityCareer[]>(query);
 
-  return [];
-}
-
-/**
- * Career Listing Page Component
- *
- * Displays all active job openings with titles, locations, and types.
- * T089 [US6] Verify career listing shows only active job openings
- *
- * @example
- * ```tsx
- * // Visited at /career
- * ```
- */
-export default async function CareerPage() {
-  const careers = await fetchCareers();
-
-  return (
-    <>
-      <Header />
-
+    return (
       <main className="min-h-screen">
         {/* Page Header */}
         <PageHeader
@@ -108,7 +120,7 @@ export default async function CareerPage() {
         {/* Job Listings */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            {careers.length > 0 ? (
+            {careers && careers.length > 0 ? (
               <div className="max-w-4xl mx-auto space-y-6">
                 {careers.map((career) => (
                   <CareerCard key={career._id} career={career} />
@@ -203,8 +215,29 @@ export default async function CareerPage() {
           </div>
         </section>
       </main>
-    </>
-  );
+    );
+  } catch (error) {
+    console.error("Error fetching careers:", error);
+    return (
+      <main className="min-h-screen">
+        <PageHeader
+          title="Join Our Team"
+          description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
+          pill="Careers"
+          breadcrumb={[{ label: "Career" }]}
+        />
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center py-16">
+              <p className="text-lg text-muted-foreground">
+                Failed to load career information.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
 }
 
 /**
