@@ -8,6 +8,7 @@ import type { ChatWidgetConfig, ChatMessage } from "@/types/chat-widget";
 import { defaultHashtagTechConfig } from "@/types/chat-widget";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import WhatsAppButton from "./whatsapp-button";
 
 /**
  * Chat Widget Component
@@ -140,8 +141,21 @@ export function ChatWidget({ config = {} }: ChatWidgetProps) {
         },
       };
 
+
+
   return (
     <>
+      {/* WhatsApp Button - Always visible when chat is closed, sits above the chat toggle */}
+      <AnimatePresence>
+        {!isOpen && (
+          <WhatsAppButton 
+            phoneNumber="+15551234567" // Sample number as requested
+            message="Hi Hashtag Tech! I'd like to discuss a project."
+            className="bottom-24 md:bottom-24 right-6 md:right-6"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Collapsed State - Floating Buttons */}
       <AnimatePresence>
         {!isOpen && (
