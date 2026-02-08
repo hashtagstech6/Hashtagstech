@@ -40,6 +40,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.claude
+CLAUDE.md
 
 # Generated files
 next-env.d.ts
