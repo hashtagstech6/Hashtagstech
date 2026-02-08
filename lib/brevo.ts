@@ -135,7 +135,7 @@ async function sendCustomerConfirmation(
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: #BE3B43; color: white; padding: 20px; text-align: center; }
         .content { padding: 30px 20px; background: #ffffff; text-align: center; }
-        .button { display: inline-block; padding: 12px 24px; background-color: #BE3B43; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #BE3B43; color: #ffffff !important; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
         .footer { margin-top: 20px; padding: 10px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; }
       </style>
     </head>
