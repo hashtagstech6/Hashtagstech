@@ -112,7 +112,7 @@ function ServiceColumn({ service, index }: { service: Service; index: number }) 
   const isPrimary = index === 1 || index === 4;
 
   return (
-    <div className="h-full flex flex-col space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">
+    <div id={service.slug} className="h-full flex flex-col space-y-6 p-6 rounded-lg bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 scroll-mt-24">
       {/* Title */}
       <h3 className="text-xl font-bold text-foreground">
         {service.title}

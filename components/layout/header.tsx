@@ -101,9 +101,9 @@ export default function Header() {
               <Image
                 src="/logo-horizontal.webp"
                 alt="Hashtag Tech Logo"
-                width={150}
-                height={40}
-                className="h-10 w-auto"
+                width={210}
+                height={56}
+                className="h-14 w-auto"
               />
             </Link>
 
@@ -118,7 +118,7 @@ export default function Header() {
                 >
                   <Link
                     href={item.href}
-                    className="text-sm font-medium text-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md px-2 py-1 relative group no-underline hover:no-underline"
+                    className="text-sm font-bold text-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md px-2 py-1 relative group no-underline hover:no-underline"
                     style={{ textShadow: "none" }}
                   >
                     {item.name}

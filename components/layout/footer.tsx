@@ -1,5 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getClient } from "@/sanity/lib/client";
+
+interface Service {
+  _id: string;
+  title: string;
+  slug: string;
+  order: number;
+}
 
 /**
  * Footer Component
@@ -8,19 +16,42 @@ import Image from "next/image";
  * Displays office locations (UAE, USA, Oman), email addresses, and 24/7 support note.
  *
  * Features:
+ * - Dynamic Service Links from Sanity
  * - Contact information column
  * - Quick links navigation
  * - Social media links
  * - Copyright bar
  * - Responsive layout (stacks on mobile)
- *
- * @example
- * ```tsx
- * <Footer />
- * ```
  */
-export default function Footer() {
+export default async function Footer() {
   const currentYear = new Date().getFullYear();
+
+  // Fetch Services Dynamically
+  let services: Service[] = [];
+  try {
+    const client = getClient();
+    if (client) {
+      const query = `
+        *[_type == "service" && isActive == true] | order(order asc) {
+          _id,
+          title,
+          "slug": slug.current,
+          order
+        }
+      `;
+      services = await client.fetch(query, {}, { useCdn: false });
+    }
+  } catch (error) {
+    console.error("Error fetching services for footer:", error);
+    // Fallback to static if fetch fails
+    services = [
+      { _id: "1", title: "Web Development", slug: "web-development", order: 1 },
+      { _id: "2", title: "App Development", slug: "app-development", order: 2 },
+      { _id: "3", title: "AI Integration", slug: "ai-integration", order: 3 },
+      { _id: "4", title: "Digital Marketing", slug: "digital-marketing", order: 4 },
+      { _id: "5", title: "UI/UX Design", slug: "ui-ux-design", order: 5 },
+    ];
+  }
 
   const contactInfo = {
     emails: [
@@ -91,9 +122,9 @@ export default function Footer() {
               <Image
                 src="/logo-horizontal.webp"
                 alt="Hashtag Tech"
-                width={140}
-                height={37}
-                className="h-9 w-auto opacity-90"
+                width={280}
+                height={88}
+                className="h-20 w-auto opacity-90"
               />
             </Link>
             <p className="text-sm text-white/60 leading-relaxed max-w-xs">
@@ -122,23 +153,17 @@ export default function Footer() {
               Services
             </h3>
             <ul className="space-y-3">
-              {[
-                { name: "Web Development", href: "/#services" },
-                { name: "App Development", href: "/#services" },
-                { name: "AI Integration", href: "/#services" },
-                { name: "Digital Marketing", href: "/#services" },
-                { name: "UI/UX Design", href: "/#services" },
-              ].map((service) => (
-                <li key={service.name}>
+              {services.map((service) => (
+                <li key={service._id}>
                   <Link
-                    href={service.href}
+                    href={`/#${service.slug}`}
                     className="group flex items-center text-sm text-white/60 hover:text-primary hover:no-underline transition-colors duration-300"
                   >
                     <span className="w-0 overflow-hidden group-hover:w-2 transition-all duration-300 text-primary mr-0 group-hover:mr-2">
                        &gt;
                     </span>
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {service.name}
+                      {service.title}
                     </span>
                   </Link>
                 </li>

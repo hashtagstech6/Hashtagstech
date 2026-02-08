@@ -72,7 +72,7 @@ export default function StatsBar() {
   return (
     <section 
       ref={sectionRef} 
-      className="bg-primary-deep py-4 text-primary-foreground"
+      className="bg-primary py-4 text-primary-foreground"
       aria-label="Company statistics"
     >
       <div className="mx-auto px-4">
