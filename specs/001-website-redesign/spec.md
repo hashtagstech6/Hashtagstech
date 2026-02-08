@@ -99,7 +99,7 @@ As a **visitor or prospect**, I want to **read blog posts to learn about Hashtag
 
 1. **Given** a visitor wants to read content, **When** they navigate to the blog page, **Then** they see a list of blog posts with excerpts, dates, and categories
 2. **Given** a visitor clicks a blog post, **When** the post loads, **Then** they see the full content with author info, related images, and proper formatting
-3. **Given** a blog post is stale content, **When** 60 seconds pass since last cache, **Then** the system refreshes the content automatically via ISR
+3. **Given** a blog post is stale content, **When** 1 hour passes since last cache, **Then** the system refreshes the content automatically via ISR
 4. **Given** a visitor wants to share a post, **When** they view a blog post, **Then** they see appropriate SEO metadata for social sharing
 
 ### User Story 6 - Explore Career Opportunities (Priority: P3)
@@ -115,7 +115,7 @@ As a **job seeker**, I want to **view open positions and apply for jobs**, so th
 1. **Given** a job seeker visits the site, **When** they navigate to the Career page, **Then** they see a list of active job openings with titles, locations, and types
 2. **Given** a job seeker clicks a job posting, **When** the job details load, **Then** they see the full description, requirements, benefits, and application information
 3. **Given** a job posting is no longer active, **When** an admin marks it inactive, **Then** it no longer appears in the career listing
-4. **Given** career content is updated, **When** 5 minutes pass since last cache, **Then** the system refreshes the content automatically via ISR
+4. **Given** career content is updated, **When** 30 minutes pass since last cache, **Then** the system refreshes the content automatically via ISR
 
 ### Edge Cases
 
@@ -195,9 +195,9 @@ As a **job seeker**, I want to **view open positions and apply for jobs**, so th
 - **FR-036**: Sanity CMS MUST provide schema for AI Services with fields: title, slug, number, shortDescription, features, content, order, isActive
 
 #### API Routes & Data
-- **FR-037**: GET /api/posts MUST return list of all blog posts with ISR revalidation of 60 seconds
+- **FR-037**: GET /api/posts MUST return list of all blog posts with ISR revalidation of 3600 seconds (1 hour)
 - **FR-038**: GET /api/posts/[slug] MUST return single blog post with metadata
-- **FR-039**: GET /api/careers MUST return list of active job openings with ISR revalidation of 300 seconds
+- **FR-039**: GET /api/careers MUST return list of active job openings with ISR revalidation of 1800 seconds (30 minutes)
 - **FR-040**: GET /api/careers/[slug] MUST return single job posting
 - **FR-041**: GET /api/services MUST return list of services ordered by display order for homepage grid
 - **FR-042**: GET /api/services/[slug] MUST return single service page content
@@ -217,25 +217,27 @@ As a **job seeker**, I want to **view open positions and apply for jobs**, so th
 - **FR-052**: Chat widget MUST display agent messages in light blue bubbles with agent avatar
 - **FR-053**: Chat widget MUST include "Start New Chat" button (red, full-width)
 - **FR-054**: Chat widget animations MUST use slide up + fade in on open, slide down + fade out on close
-- **FR-066**: Chat widget MUST be implemented as a reusable component with props for customization (branding, theme colors, messages)
+- **FR-055**: Chat widget MUST be implemented as a reusable component with props for customization (branding, theme colors, messages)
 
 #### Performance & Technical
 - **FR-055**: All images MUST use next/image component with proper sizes attribute and automatic WebP format with PNG/JPEG fallback
 - **FR-056**: Heavy components (GSAP, chat widget) MUST use next/dynamic for code splitting
 - **FR-057**: Homepage MUST use ISR with revalidation of 3600 seconds (1 hour)
-- **FR-058**: Blog listing and posts MUST use ISR with revalidation of 60 seconds
-- **FR-059**: Career pages MUST use ISR with revalidation of 300 seconds
-- **FR-060**: Server Components MUST be used by default (only add "use client" when necessary)
+- **FR-058**: Blog listing and posts MUST use ISR with revalidation of 3600 seconds (1 hour)
+- **FR-059**: Career pages MUST use ISR with revalidation of 1800 seconds (30 minutes)
+- **FR-060**: Services and Team pages MUST use ISR with revalidation of 3600 seconds (1 hour) and 86400 seconds (24 hours) respectively
+- **FR-061**: Server Components MUST be used by default (only add "use client" when necessary)
+- **FR-062**: Centralized query utilities with React cache() MUST be used for all Sanity CMS data fetching to enable automatic deduplication across render passes
 
 #### Accessibility
-- **FR-061**: All images MUST have descriptive alt text
-- **FR-062**: All interactive elements MUST be keyboard navigable
-- **FR-063**: Icon-only buttons MUST include ARIA labels
-- **FR-064**: Focus states MUST use brand primary color (--ring) and be clearly visible
-- **FR-065**: Color contrast MUST meet WCAG 2.1 AA standards (4.5:1 minimum for text)
-- **FR-066**: Reduced motion support MUST be implemented via `prefers-reduced-motion` media query
-- **FR-067**: Semantic HTML MUST be used throughout (proper heading hierarchy, landmark regions, nav elements)
-- **FR-068**: Focus MUST NOT be trapped when chat widget opens/closes
+- **FR-063**: All images MUST have descriptive alt text
+- **FR-064**: All interactive elements MUST be keyboard navigable
+- **FR-065**: Icon-only buttons MUST include ARIA labels
+- **FR-066**: Focus states MUST use brand primary color (--ring) and be clearly visible
+- **FR-067**: Color contrast MUST meet WCAG 2.1 AA standards (4.5:1 minimum for text)
+- **FR-068**: Reduced motion support MUST be implemented via `prefers-reduced-motion` media query
+- **FR-069**: Semantic HTML MUST be used throughout (proper heading hierarchy, landmark regions, nav elements)
+- **FR-070**: Focus MUST NOT be trapped when chat widget opens/closes
 
 ### Key Entities *(include if feature involves data)*
 

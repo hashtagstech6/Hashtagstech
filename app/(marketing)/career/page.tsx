@@ -3,7 +3,7 @@ import Link from "next/link";
 import PageHeader from "@/components/layout/page-header";
 import { formatDate } from "@/lib/utils";
 import { MapPin, Briefcase, DollarSign, ArrowRight } from "lucide-react";
-import { getClient } from "@/sanity/lib/client";
+import { getCareers } from "@/sanity/lib/queries";
 
 // Type for Sanity career
 interface SanityCareer {
@@ -46,198 +46,130 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Revalidation time for ISR (300 seconds = 5 minutes)
+ * Revalidation time for ISR (30 minutes)
+ * Optimized for Next.js 15 caching
  */
-export const revalidate = 300;
+export const revalidate = 1800;
 
 /**
  * Career Listing Page Component
  *
- * Fetches careers directly from Sanity CMS (server-side).
+ * Fetches careers using cached query utilities.
+ * Automatic deduplication across render passes.
  */
 export default async function CareerPage() {
-  const client = getClient();
+  // Using cached query function - automatically deduplicates requests
+  const careers = await getCareers();
 
-  if (!client) {
-    return (
-      <main className="min-h-screen">
-        <PageHeader
-          title="Join Our Team"
-          description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
-          pill="Careers"
-          breadcrumb={[{ label: "Career" }]}
-        />
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container mx-auto px-4">
+  return (
+    <main className="min-h-screen">
+      {/* Page Header */}
+      <PageHeader
+        title="Join Our Team"
+        description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
+        pill="Careers"
+        breadcrumb={[{ label: "Career" }]}
+      />
+
+      {/* Job Listings */}
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container mx-auto px-4">
+          {careers && careers.length > 0 ? (
+            <div className="max-w-4xl mx-auto space-y-6">
+              {careers.map((career) => (
+                <CareerCard key={career._id} career={career} />
+              ))}
+            </div>
+          ) : (
             <div className="max-w-4xl mx-auto text-center py-16">
               <p className="text-lg text-muted-foreground">
-                Career information not available.
+                No open positions at the moment. Please check back soon!
               </p>
             </div>
-          </div>
-        </section>
-      </main>
-    );
-  }
+          )}
+        </div>
+      </section>
 
-  try {
-    const query = `
-      *[_type == "career" && isActive == true] | order(publishedAt desc) {
-        _id,
-        title,
-        "slug": slug.current,
-        department,
-        location,
-        type,
-        description,
-        requirements,
-        benefits,
-        salary {
-          min,
-          max,
-          currency,
-          period
-        },
-        isActive,
-        publishedAt,
-        applicationUrl,
-        applicationEmail
-      }
-    `;
-
-    const careers = await client.fetch<SanityCareer[]>(query);
-
-    return (
-      <main className="min-h-screen">
-        {/* Page Header */}
-        <PageHeader
-          title="Join Our Team"
-          description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
-          pill="Careers"
-          breadcrumb={[{ label: "Career" }]}
-        />
-
-        {/* Job Listings */}
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container mx-auto px-4">
-            {careers && careers.length > 0 ? (
-              <div className="max-w-4xl mx-auto space-y-6">
-                {careers.map((career) => (
-                  <CareerCard key={career._id} career={career} />
-                ))}
-              </div>
-            ) : (
-              <div className="max-w-4xl mx-auto text-center py-16">
-                <p className="text-lg text-muted-foreground">
-                  No open positions at the moment. Please check back soon!
+      {/* Why Join Us Section */}
+      <section className="py-16 md:py-24 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">
+              Why Work at Hashtag Tech?
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2">Cutting-Edge Tech</h3>
+                <p className="text-muted-foreground">
+                  Work with the latest technologies including AI agents,
+                  Next.js, and modern frameworks.
                 </p>
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* Why Join Us Section */}
-        <section className="py-16 md:py-24 bg-muted">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-12">
-                Why Work at Hashtag Tech?
-              </h2>
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-primary"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Cutting-Edge Tech</h3>
-                  <p className="text-muted-foreground">
-                    Work with the latest technologies including AI agents,
-                    Next.js, and modern frameworks.
-                  </p>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
                 </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-primary"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Great Team</h3>
-                  <p className="text-muted-foreground">
-                    Collaborate with talented engineers and designers in a
-                    supportive environment.
-                  </p>
+                <h3 className="text-xl font-bold mb-2">Great Team</h3>
+                <p className="text-muted-foreground">
+                  Collaborate with talented engineers and designers in a
+                  supportive environment.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
                 </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-primary"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Growth</h3>
-                  <p className="text-muted-foreground">
-                    Continuous learning opportunities, conferences, and career
-                    advancement paths.
-                  </p>
-                </div>
+                <h3 className="text-xl font-bold mb-2">Growth</h3>
+                <p className="text-muted-foreground">
+                  Continuous learning opportunities, conferences, and career
+                  advancement paths.
+                </p>
               </div>
             </div>
           </div>
-        </section>
-      </main>
-    );
-  } catch (error) {
-    console.error("Error fetching careers:", error);
-    return (
-      <main className="min-h-screen">
-        <PageHeader
-          title="Join Our Team"
-          description="We're always looking for talented individuals to help us build amazing software solutions. Check out our open positions below."
-          pill="Careers"
-          breadcrumb={[{ label: "Career" }]}
-        />
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center py-16">
-              <p className="text-lg text-muted-foreground">
-                Failed to load career information.
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
-  }
+        </div>
+      </section>
+    </main>
+  );
 }
 
 /**
@@ -249,9 +181,9 @@ function CareerCard({ career }: { career: SanityCareer }) {
       href={`/career/${career.slug}`}
       className="group relative block bg-white rounded-2xl p-6 md:p-8 border border-border/50 hover:border-primary/20 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden no-underline hover:no-underline"
     >
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 relative z-10">
         <div className="flex-1 space-y-4">
-          {/* Title - No Underline */}
+          {/* Title */}
           <h3 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors no-underline">
             {career.title}
           </h3>

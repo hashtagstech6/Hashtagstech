@@ -3,12 +3,12 @@ name: sanity-integration
 description: Build production Sanity CMS integrations with Next.js, SEO optimization, and MCP tools. Use when adding Sanity CMS for products, blogs, services, events, portfolios, or any content-managed features to websites. Handles schema design, API routes, SEO, image optimization, Live Content API, and reusable component patterns.
 allowed-tools: Read, Write, Glob, Grep, Edit, mcp__context7__*, mcp__tavily__*
 category: fullstack
-version: 1.6.0
+version: 1.7.0
 ---
 
 # Sanity CMS Integration
 
-Build production-grade Sanity CMS integrations with Next.js, featuring SEO optimization, ISR caching, image optimization, and MCP-powered documentation lookup.
+Build production-grade Sanity CMS integrations with Next.js, featuring SEO optimization, Next.js 15 ISR caching, React cache() memoization, image optimization, and MCP-powered documentation lookup.
 
 ## Proficiency Progression Path
 
@@ -2046,10 +2046,141 @@ To achieve B2 certification in this skill:
 
 ---
 
-**Version**: 1.6.0
-**Last Updated**: 2025-02-05
+**Version**: 1.7.0
+**Last Updated**: 2025-02-08
 **Proficiency Framework**: CEFR + Bloom's Taxonomy + DigComp
 **Progression**: A2 → A2 → B1 → B1 → B1 → B1.5 → B2 → B2 → B2
+
+## What's New (v1.7.0)
+
+### Major Addition: Next.js 15 Caching Best Practices
+
+Based on latest research from Sanity and Next.js documentation:
+
+- **NEW: `sanityFetch` Helper Pattern** - Centralized caching configuration with time-based and tag-based revalidation
+- **NEW: React `cache` Function** - Automatic query deduplication across render passes
+- **NEW: CDN Configuration** - Enable `useCdn: true` in production for better performance
+- **NEW: Recommended Revalidation Times** - Content-type specific cache durations
+- **NEW: On-Demand Revalidation** - Webhook-based cache invalidation patterns
+- **NEW: Query Optimization Patterns** - Prevent duplicate requests and over-fetching
+
+Key Changes from Next.js 14 to 15:
+| Aspect | Next.js 14 | Next.js 15 |
+|--------|-------------|-------------|
+| Default fetch caching | Aggressive (cached) | Opt-out (no cache) |
+| Required action | Nothing | Must set `cache: 'force-cache'` or `next: { revalidate }` |
+| useCdn recommendation | false for ISR | true in production |
+| Cache invalidation | Automatic | Explicit (tags or time-based) |
+
+### New Core Pattern: `sanityFetch` Helper
+
+```typescript
+// sanity/lib/client.ts
+export async function sanityFetch<constQueryString extends string>({
+  query,
+  params = {},
+  revalidate = 3600, // 1 hour default
+  tags = [],
+}: {
+  query: constQueryString;
+  params?: QueryParams;
+  revalidate?: number | false;
+  tags?: string[];
+}) {
+  const client = getClient();
+  if (!client) throw new Error("Sanity client not configured");
+
+  return client.fetch(query, params, {
+    cache: 'force-cache', // Required in Next.js 15
+    next: {
+      revalidate: tags.length ? false : revalidate,
+      tags,
+    },
+  });
+}
+```
+
+### New Core Pattern: Cached Query Utilities
+
+```typescript
+// sanity/lib/queries.ts
+import { cache } from "react";
+import { sanityFetch } from "./client";
+
+// Memoized query - automatic deduplication
+export const getPosts = cache(async (limit = 10) => {
+  return sanityFetch({
+    query: `*[_type == "post"] | order(publishedAt desc)[0...${limit}] {
+      _id, title, "slug": slug.current, excerpt, publishedAt
+    }`,
+    revalidate: 3600, // 1 hour
+  });
+});
+```
+
+### Recommended Revalidation Times
+
+| Content Type | Revalidate | Rationale |
+|--------------|-----------|-----------|
+| **Blog Posts** | 3600s (1 hour) | Content doesn't change often after publish |
+| **Blog Detail** | 3600s (1 hour) | Same as listing |
+| **Careers** | 1800s (30 min) | Job postings change moderately |
+| **Team Members** | 3600s (1 hour) | Team changes infrequently |
+| **Services** | 86400s (24 hours) | Rarely changes |
+| **Site Settings** | 86400s (24 hours) | Very static |
+
+### On-Demand Revalidation Pattern
+
+```typescript
+// app/api/revalidate/route.ts
+import { revalidateTag, revalidatePath } from "next/cache";
+
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  if (body._type === "post") {
+    revalidateTag("posts");
+    revalidatePath(`/blog/${body.slug.current}`);
+  }
+
+  return NextResponse.json({ revalidated: true });
+}
+```
+
+### Client Configuration Update
+
+```typescript
+// sanity/lib/client.ts
+export function getClient(): SanityClient | null {
+  // ...
+  _client = createClient({
+    projectId,
+    dataset,
+    apiVersion,
+    useCdn: process.env.NODE_ENV === "production", // ✅ Enable CDN in production
+    // ...
+  });
+}
+```
+
+### Best Practices for Low-Traffic Sites (2-5k visits/month)
+
+1. **Use CDN in production** - Set `useCdn: true` for better performance
+2. **Time-based revalidation** - Default to 1 hour for most content
+3. **Tag-based for immediate updates** - Use webhooks for critical content
+4. **React `cache` for memoization** - Prevents duplicate requests in same render
+5. **Direct client in server components** - Avoid API route overhead
+6. **Optimize related posts queries** - Only fetch needed fields, not all posts
+
+### Sanity Free Plan Usage (2-5k visits/month)
+
+| Resource | Limit | Expected Usage | Buffer |
+|-----------|-------|----------------|--------|
+| API Requests | 200k/month | ~10k-30k | 85%+ remaining |
+| CDN Requests | 1M/month | ~50k-150k | 85%+ remaining |
+| Bandwidth | 20GB | ~5-10GB | 50%+ remaining |
+
+**Conclusion:** With proper caching, you're well within limits.
 
 ## What's New (v1.6.0)
 

@@ -8,7 +8,7 @@ import Footer from "@/components/layout/footer";
 import { formatDate } from "@/lib/utils";
 import { BlogFeaturedImage, RelatedPostCard } from "@/components/blog/blog-card";
 import PortableText from "@/components/blog/portable-text";
-import { validateSanityConfig } from "@/sanity/env";
+import { getPostBySlug, getAllPostSlugs, getRelatedPosts } from "@/sanity/lib/queries";
 
 // Type for Sanity blog post from API
 interface SanityBlogPost {
@@ -54,68 +54,10 @@ interface SanityBlogPost {
  * Generate static params for all blog posts
  */
 export async function generateStaticParams() {
-  const client = getClient();
-  if (!client) return [];
-
-  const query = `*[_type == "post"]{ "slug": slug.current }`;
-  const posts = await client.fetch(query);
-
-  return posts.map((post: { slug: string }) => ({
+  const posts = await getAllPostSlugs();
+  return posts.map((post) => ({
     slug: post.slug,
   }));
-}
-
-/**
- * Fetch blog post by slug from Sanity API
- */
-import { getClient } from "@/sanity/lib/client";
-
-/**
- * Fetch blog post by slug from Sanity API
- */
-async function fetchBlogPost(slug: string): Promise<SanityBlogPost | null> {
-  const client = getClient();
-  if (!client) return null;
-
-  const query = `
-    *[_type == "post" && slug.current == $slug][0] {
-      _id,
-      title,
-      "slug": slug.current,
-      excerpt,
-      mainImage {
-        asset-> {
-          _id,
-          url
-        },
-        alt
-      },
-      content,
-      author-> {
-        _id,
-        name,
-        "slug": slug.current,
-        image {
-          asset-> {
-            _id,
-            url
-          }
-        },
-        bio
-      },
-      categories[]-> {
-        _id,
-        name,
-        "slug": slug.current,
-        color
-      },
-      publishedAt,
-      seoTitle,
-      seoDescription
-    }
-  `;
-
-  return client.fetch(query, { slug });
 }
 
 /**
@@ -127,7 +69,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await fetchBlogPost(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
@@ -168,50 +110,11 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 60;
-
 /**
- * Fetch all posts (for related posts section)
+ * Revalidation time for ISR (1 hour)
+ * Optimized for Next.js 15 caching
  */
-async function fetchAllPosts(): Promise<SanityBlogPost[]> {
-  const client = getClient();
-  if (!client) return [];
-
-  const query = `
-    *[_type == "post"] | order(publishedAt desc) {
-      _id,
-      title,
-      "slug": slug.current,
-      excerpt,
-      mainImage {
-        asset-> {
-          _id,
-          url
-        },
-        alt
-      },
-      author-> {
-        _id,
-        name,
-        "slug": slug.current,
-        image {
-          asset-> {
-            _id,
-            url
-          }
-        }
-      },
-      categories[]-> {
-        _id,
-        name,
-        "slug": slug.current
-      },
-      publishedAt
-    }
-  `;
-
-  return client.fetch(query);
-}
+export const revalidate = 3600;
 
 /**
  * Blog Post Detail Page Component
@@ -222,17 +125,15 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await fetchBlogPost(slug);
+  // Using cached query function - automatically deduplicates requests
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  // Fetch related posts
-  const allPosts = await fetchAllPosts();
-  const relatedPosts = allPosts
-    .filter(p => p._id !== post._id)
-    .slice(0, 3);
+  // Fetch related posts using cached query function
+  const relatedPosts = await getRelatedPosts(post._id, 3);
 
   // Normalize data
   const title = post.title;

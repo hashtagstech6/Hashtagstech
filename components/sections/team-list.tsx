@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getClient } from "@/sanity/lib/client";
+import { getTeamMembers } from "@/sanity/lib/queries";
 
 interface TeamMember {
   _id: string;
@@ -26,48 +26,13 @@ interface TeamMember {
 /**
  * Team List Server Component
  *
- * Fetches team members directly from Sanity CMS (server-side).
- * Works correctly in both development and production.
+ * Fetches team members using cached query utilities.
+ * Automatic deduplication across render passes with 1-hour ISR.
  */
 export default async function TeamList() {
-  const client = getClient();
-
-  if (!client) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">Team information not available.</p>
-      </div>
-    );
-  }
-
   try {
-    // Fetch directly from Sanity instead of via API route
-    const query = `
-      *[_type == "teamMember" && (isActive == true || defined(isActive) == false)] | order(order asc)[0...50] {
-        _id,
-        name,
-        role,
-        department,
-        photo {
-          asset-> {
-            _id,
-            url
-          },
-          alt
-        },
-        image {
-          asset-> {
-            _id,
-            url
-          },
-          alt
-        },
-        skills,
-        order
-      }
-    `;
-
-    const teamMembers = await client.fetch<TeamMember[]>(query);
+    // Using cached query function - automatically deduplicates requests
+    const teamMembers = await getTeamMembers();
 
     if (!teamMembers || teamMembers.length === 0) {
       return (

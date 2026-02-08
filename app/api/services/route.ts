@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClient } from "@/sanity/lib/client";
-import { validateSanityConfig } from "@/sanity/env";
+import { getServices } from "@/sanity/lib/queries";
 
 /**
  * GET /api/services
@@ -8,8 +7,9 @@ import { validateSanityConfig } from "@/sanity/env";
  * Fetch all active services with ISR caching.
  *
  * Caching:
- * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
- * - stale-while-revalidate: 7200 seconds (serve stale while revalidating)
+ * - Uses cached query utility with 24-hour revalidation
+ * - Services rarely change, so longer cache is appropriate
+ * - Automatic deduplication across requests
  *
  * Response:
  * ```json
@@ -34,47 +34,14 @@ import { validateSanityConfig } from "@/sanity/env";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  // Validate Sanity configuration
-  const config = validateSanityConfig();
-  if (!config.valid) {
-    return NextResponse.json(
-      { error: config.error || "Sanity configuration error" },
-      { status: 500 }
-    );
-  }
-
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Sanity client not configured" },
-      { status: 500 }
-    );
-  }
-
   try {
-    const query = `
-      *[_type == "service" && isActive == true] | order(order asc) {
-        _id,
-        title,
-        "slug": slug.current,
-        category,
-        shortDescription,
-        features,
-        ctaText,
-        ctaStyle,
-        order,
-        icon,
-        isActive
-      }
-    `;
-
-    const services = await client.fetch(query, {}, { useCdn: false });
+    // Using cached query function - automatically deduplicates requests
+    const services = await getServices();
 
     return NextResponse.json(services, {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        // Cache at browser/CDN level for 1 hour with stale-while-revalidate
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
       },
     });
   } catch (error) {
