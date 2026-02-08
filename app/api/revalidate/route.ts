@@ -40,20 +40,49 @@ if (!WEBHOOK_SECRET && process.env.NODE_ENV === "production") {
 
 /**
  * Verify webhook signature from Sanity
+ *
+ * Sanity sends signature in format: t=timestamp,v1=signature
+ * Example: "t=1770567243957,v1=9q_uHIMotATZtUJ3KR_PgKY6LhGRHJkMFCxn--ZEtJ0"
  */
 function verifySignature(body: string, signature: string): boolean {
   if (!WEBHOOK_SECRET) return false;
 
-  const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
-  const digest = hmac.update(body).digest("base64");
+  try {
+    // Parse Sanity's signature format: t=timestamp,v1=signature
+    const parts = signature.split(",");
+    let signatureValue = "";
 
-  // Sanity sends signature in format: sha256=<base64>
-  const providedSignature = signature.replace("sha256=", "");
+    for (const part of parts) {
+      if (part.startsWith("v1=")) {
+        signatureValue = part.substring(3);
+        break;
+      }
+    }
 
-  return crypto.timingSafeEqual(
-    Buffer.from(digest, "base64"),
-    Buffer.from(providedSignature, "base64")
-  );
+    if (!signatureValue) {
+      console.error("❌ Could not extract v1 signature from:", signature);
+      return false;
+    }
+
+    // Compute HMAC signature using the same method as Sanity
+    const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
+    hmac.update(body, "utf8");
+    const digest = hmac.digest("base64");
+
+    // Compare signatures
+    const isValid = digest === signatureValue;
+
+    if (!isValid) {
+      console.error("❌ Signature mismatch:");
+      console.error("   Expected:", digest);
+      console.error("   Received:", signatureValue);
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error("❌ Signature verification error:", error);
+    return false;
+  }
 }
 
 /**
@@ -98,34 +127,19 @@ export async function POST(request: Request) {
     console.log("🔍 Webhook headers received:", JSON.stringify(allHeaders, null, 2));
 
     // Get signature from headers
-    // Sanity may send as: x-sanity-webhook-signature or sanity-webhook-signature
-    const signature = request.headers.get("x-sanity-webhook-signature") ||
-                      request.headers.get("sanity-webhook-signature");
+    // Sanity sends as: sanity-webhook-signature
+    const signature = request.headers.get("sanity-webhook-signature");
 
     if (!signature) {
-      // TEMPORARY: Allow webhook without signature for debugging
-      console.warn("⚠️ Webhook: Missing signature header - allowing for debugging");
-      console.warn("⚠️ All received headers:", allHeaders);
-
-      // Get raw body and continue anyway
-      const rawBody = await request.text();
-      let payload;
-      try {
-        payload = JSON.parse(rawBody);
-      } catch {
-        return NextResponse.json(
-          { error: "Bad Request", message: "Invalid JSON" },
-          { status: 400 }
-        );
-      }
-
-      console.log("📦 Webhook payload (no signature):", JSON.stringify(payload, null, 2));
-
-      // Continue with processing despite missing signature
-      return processWebhookPayload(payload);
+      console.error("❌ Webhook: Missing signature header");
+      console.error("❌ Available headers:", Object.keys(allHeaders));
+      return NextResponse.json(
+        { error: "Unauthorized", message: "Missing signature" },
+        { status: 401 }
+      );
     }
 
-    // Get raw body for signature verification
+    // Get raw body FIRST (can only read stream once)
     const rawBody = await request.text();
 
     // Verify signature
@@ -136,6 +150,8 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+
+    console.log("✅ Webhook signature verified");
 
     // Parse webhook payload
     let payload;
