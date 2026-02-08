@@ -3,7 +3,7 @@ name: sanity-integration
 description: Build production Sanity CMS integrations with Next.js, SEO optimization, and MCP tools. Use when adding Sanity CMS for products, blogs, services, events, portfolios, or any content-managed features to websites. Handles schema design, API routes, SEO, image optimization, Live Content API, webhook-based revalidation, and reusable component patterns.
 allowed-tools: Read, Write, Glob, Grep, Edit, mcp__context7__*, mcp__tavily__*
 category: fullstack
-version: 1.8.0
+version: 1.8.1
 ---
 
 # Sanity CMS Integration
@@ -2051,6 +2051,45 @@ To achieve B2 certification in this skill:
 **Proficiency Framework**: CEFR + Bloom's Taxonomy + DigComp
 **Progression**: A2 → A2 → B1 → B1 → B1 → B1.5 → B2 → B2 → B2
 
+## What's New (v1.8.1)
+
+### Bug Fix: Correct Sanity Webhook Signature Verification
+
+Fixed critical bug in signature verification that caused webhook authentication failures:
+
+**The Problem:**
+- Sanity sends signature in format: `t=timestamp,v1=signature` (NOT `sha256=<base64>`)
+- Original code expected Stripe-style format with `sha256=` prefix
+- Result: All webhooks failed with 401 Unauthorized despite having correct secret
+
+**The Fix:**
+- Updated `verifySignature()` to parse Sanity's actual format
+- Changed header from `x-sanity-webhook-signature` to `sanity-webhook-signature`
+- Direct HMAC comparison instead of buffer comparison
+- Added proper error logging for debugging
+
+**Code Changes:**
+```typescript
+// Before (incorrect):
+const signature = request.headers.get("x-sanity-webhook-signature");
+const providedSignature = signature.replace("sha256=", "");
+return crypto.timingSafeEqual(
+  Buffer.from(digest, "base64"),
+  Buffer.from(providedSignature, "base64")
+);
+
+// After (correct):
+const signature = request.headers.get("sanity-webhook-signature");
+const parts = signature.split(",");
+const signatureValue = parts.find(p => p.startsWith("v1="))?.substring(3);
+return digest === signatureValue;
+```
+
+**What This Means:**
+- Webhooks now work correctly with Sanity's actual signature format
+- Content updates immediately when published in Sanity Studio
+- Debug logs show actual headers received from Sanity
+
 ## What's New (v1.8.0)
 
 ### Major Addition: Complete Webhook On-Demand Revalidation
@@ -2178,18 +2217,41 @@ const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
 
 /**
  * Verify webhook signature from Sanity
+ *
+ * Sanity sends signature in format: t=timestamp,v1=signature
+ * Example: "t=1770567243957,v1=9q_uHIMotATZtUJ3KR_PgKY6LhGRHJkMFCxn--ZEtJ0"
  */
 function verifySignature(body: string, signature: string): boolean {
   if (!WEBHOOK_SECRET) return false;
 
-  const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
-  const digest = hmac.update(body).digest("base64");
-  const providedSignature = signature.replace("sha256=", "");
+  try {
+    // Parse Sanity's signature format: t=timestamp,v1=signature
+    const parts = signature.split(",");
+    let signatureValue = "";
 
-  return crypto.timingSafeEqual(
-    Buffer.from(digest, "base64"),
-    Buffer.from(providedSignature, "base64")
-  );
+    for (const part of parts) {
+      if (part.startsWith("v1=")) {
+        signatureValue = part.substring(3);
+        break;
+      }
+    }
+
+    if (!signatureValue) {
+      console.error("Could not extract v1 signature from:", signature);
+      return false;
+    }
+
+    // Compute HMAC signature using the same method as Sanity
+    const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
+    hmac.update(body, "utf8");
+    const digest = hmac.digest("base64");
+
+    // Compare signatures directly
+    return digest === signatureValue;
+  } catch (error) {
+    console.error("Signature verification error:", error);
+    return false;
+  }
 }
 
 /**
@@ -2210,11 +2272,14 @@ function getRevalidationConfig(docType: string) {
 
 export async function POST(request: Request) {
   try {
-    const signature = request.headers.get("x-sanity-webhook-signature");
+    // Sanity sends signature as: sanity-webhook-signature
+    // Format: t=timestamp,v1=signature
+    const signature = request.headers.get("sanity-webhook-signature");
     if (!signature) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get raw body FIRST (can only read stream once)
     const rawBody = await request.text();
     if (!verifySignature(rawBody, signature)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
