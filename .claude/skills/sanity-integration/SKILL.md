@@ -1,14 +1,14 @@
 ---
 name: sanity-integration
-description: Build production Sanity CMS integrations with Next.js, SEO optimization, and MCP tools. Use when adding Sanity CMS for products, blogs, services, events, portfolios, or any content-managed features to websites. Handles schema design, API routes, SEO, image optimization, Live Content API, and reusable component patterns.
+description: Build production Sanity CMS integrations with Next.js, SEO optimization, and MCP tools. Use when adding Sanity CMS for products, blogs, services, events, portfolios, or any content-managed features to websites. Handles schema design, API routes, SEO, image optimization, Live Content API, webhook-based revalidation, and reusable component patterns.
 allowed-tools: Read, Write, Glob, Grep, Edit, mcp__context7__*, mcp__tavily__*
 category: fullstack
-version: 1.7.0
+version: 1.8.0
 ---
 
 # Sanity CMS Integration
 
-Build production-grade Sanity CMS integrations with Next.js, featuring SEO optimization, Next.js 15 ISR caching, React cache() memoization, image optimization, and MCP-powered documentation lookup.
+Build production-grade Sanity CMS integrations with Next.js, featuring SEO optimization, Next.js 15 ISR caching, React cache() memoization, webhook-based on-demand revalidation, image optimization, and MCP-powered documentation lookup.
 
 ## Proficiency Progression Path
 
@@ -2051,6 +2051,33 @@ To achieve B2 certification in this skill:
 **Proficiency Framework**: CEFR + Bloom's Taxonomy + DigComp
 **Progression**: A2 → A2 → B1 → B1 → B1 → B1.5 → B2 → B2 → B2
 
+## What's New (v1.8.0)
+
+### Major Addition: Complete Webhook On-Demand Revalidation
+
+Production-ready webhook implementation for instant content updates:
+
+- **NEW: Complete Webhook Route Implementation** - Full `app/api/revalidate/route.ts` with HMAC signature verification
+- **NEW: Security Best Practices** - HMAC signature verification with timing-safe comparison
+- **NEW: Document Type Mapping** - Automatic tag and path revalidation based on content type
+- **NEW: Detailed Setup Guide** - Step-by-step webhook configuration in Sanity Studio
+- **NEW: Testing & Troubleshooting** - GET endpoint for webhook testing and debugging
+- **NEW: Complete Tag System** - All queries updated with cache tags for granular revalidation
+
+**Benefits:**
+- Content updates **immediately** when published in Sanity Studio
+- No waiting for time-based cache expiration (30min-24hr fallback)
+- Better user experience with instant content updates
+- Still maintains time-based fallback if webhook fails
+
+**What Changed:**
+| Feature | Before | After |
+|---------|--------|-------|
+| Blog update time | 1 hour | **Immediate** |
+| Career update time | 30 min | **Immediate** |
+| Service update time | 24 hours | **Immediate** |
+| Fallback if webhook fails | N/A | Time-based still works |
+
 ## What's New (v1.7.0)
 
 ### Major Addition: Next.js 15 Caching Best Practices
@@ -2129,23 +2156,201 @@ export const getPosts = cache(async (limit = 10) => {
 | **Services** | 86400s (24 hours) | Rarely changes |
 | **Site Settings** | 86400s (24 hours) | Very static |
 
-### On-Demand Revalidation Pattern
+### On-Demand Revalidation with Webhooks
+
+**What it does:** Content updates **immediately** when you publish in Sanity Studio, instead of waiting for time-based cache expiration.
+
+**Benefits:**
+- Instant content updates after publishing
+- No waiting for cache expiration
+- Better user experience
+- Still has time-based fallback
+
+#### Complete Webhook Implementation
 
 ```typescript
 // app/api/revalidate/route.ts
+import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
+import crypto from "crypto";
+
+const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
+
+/**
+ * Verify webhook signature from Sanity
+ */
+function verifySignature(body: string, signature: string): boolean {
+  if (!WEBHOOK_SECRET) return false;
+
+  const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
+  const digest = hmac.update(body).digest("base64");
+  const providedSignature = signature.replace("sha256=", "");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(digest, "base64"),
+    Buffer.from(providedSignature, "base64")
+  );
+}
+
+/**
+ * Map Sanity document types to cache tags and paths
+ */
+function getRevalidationConfig(docType: string) {
+  const configs: Record<string, { tags: string[]; pathPrefix?: string }> = {
+    post: { tags: ["posts"], pathPrefix: "/blog" },
+    career: { tags: ["careers"], pathPrefix: "/career" },
+    teamMember: { tags: ["team"], pathPrefix: "/team" },
+    service: { tags: ["services"], pathPrefix: "/services" },
+    testimonial: { tags: ["testimonials"] },
+    successStory: { tags: ["successStories"] },
+  };
+
+  return configs[docType];
+}
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  try {
+    const signature = request.headers.get("x-sanity-webhook-signature");
+    if (!signature) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  if (body._type === "post") {
-    revalidateTag("posts");
-    revalidatePath(`/blog/${body.slug.current}`);
+    const rawBody = await request.text();
+    if (!verifySignature(rawBody, signature)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const payload = JSON.parse(rawBody);
+    const { _type, slug, operation } = payload;
+
+    const config = getRevalidationConfig(_type);
+    if (!config) {
+      return NextResponse.json({
+        revalidated: false,
+        message: `No revalidation configured for type: ${_type}`,
+      });
+    }
+
+    // Revalidate cache tags
+    for (const tag of config.tags) {
+      revalidateTag(tag);
+    }
+
+    // Revalidate specific path if slug is available
+    if (config.pathPrefix && slug?.current) {
+      revalidatePath(`${config.pathPrefix}/${slug.current}`);
+    }
+
+    // Revalidate listing page
+    if (config.pathPrefix) {
+      revalidatePath(config.pathPrefix);
+    }
+
+    return NextResponse.json({
+      revalidated: true,
+      type: _type,
+      slug: slug?.current,
+      operation,
+      tags: config.tags,
+    });
+
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
+}
 
-  return NextResponse.json({ revalidated: true });
+// GET handler for testing
+export async function GET() {
+  return NextResponse.json({
+    webhook: "/api/revalidate",
+    status: WEBHOOK_SECRET ? "configured" : "missing-secret",
+    supportedTypes: ["post", "career", "teamMember", "service", "testimonial", "successStory"],
+  });
 }
 ```
+
+#### Update Queries to Use Tags
+
+```typescript
+// sanity/lib/queries.ts
+export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
+  return sanityFetch({
+    query: `*[_type == "post"] | order(publishedAt desc)[0...${limit}] { ... }`,
+    revalidate: 3600, // 1 hour fallback
+    tags: ["posts"], // Enable webhook revalidation
+  });
+});
+
+export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
+  const results = await sanityFetch({
+    query: `*[_type == "post" && slug.current == $slug][0]{ ... }`,
+    params: { slug },
+    revalidate: 3600,
+    tags: ["posts", `post:${slug}`], // Multiple tags for granular control
+  });
+  return results[0] || null;
+});
+```
+
+#### Sanity Webhook Configuration
+
+**Step 1: Generate Secret**
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+**Step 2: Add Environment Variable**
+```bash
+# .env.local
+SANITY_WEBHOOK_SECRET=your-generated-secret-here
+
+# Netlify/Vercel
+# Add to environment variables
+```
+
+**Step 3: Configure Webhook in Sanity**
+
+Go to [sanity.io/manage](https://sanity.io/manage) → your project → **API → Webhooks** → **+ New webhook**
+
+| Field | Value |
+|-------|-------|
+| **Name** | Next.js Cache Revalidation |
+| **URL** | `https://yourdomain.com/api/revalidate` |
+| **Dataset** | `production` |
+| **Trigger on** | ✅ Create, ✅ Update, ✅ Delete |
+| **Filter** | *Leave empty* (triggers on all types) |
+| **Projection** | `{ _id, _type, "slug": slug.current }` |
+| **HTTP Method** | `POST` |
+| **Secret** | Paste your `SANITY_WEBHOOK_SECRET` |
+| **API Version** | `v2024-01-01` |
+| **Drafts** | ❌ OFF (don't trigger on drafts) |
+| **Versions** | ❌ OFF (not needed) |
+
+**Step 4: Test Webhook**
+
+1. Test endpoint is accessible:
+```bash
+curl https://yourdomain.com/api/revalidate
+```
+
+2. Publish content in Sanity Studio
+3. Check server logs for: `✅ Webhook: Revalidated post (update)`
+4. Visit the page - content should be updated immediately
+
+#### Supported Document Types
+
+| Document Type | Cache Tags | Paths Revalidated |
+|--------------|-----------|-------------------|
+| `post` | `posts`, `post:{slug}` | `/blog`, `/blog/{slug}` |
+| `career` | `careers`, `career:{slug}` | `/career`, `/career/{slug}` |
+| `teamMember` | `team` | `/team` |
+| `service` | `services` | `/services` |
+| `testimonial` | `testimonials` | (Homepage) |
+| `successStory` | `successStories` | (Homepage) |
 
 ### Client Configuration Update
 
