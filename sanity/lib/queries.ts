@@ -93,7 +93,8 @@ interface TeamMember {
 
 /**
  * Fetch all blog posts with 1-hour cache.
- * Revalidates every hour automatically.
+ * Revalidates every hour automatically or via webhook.
+ * Tag: 'posts' enables on-demand revalidation.
  */
 export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
   return sanityFetch({
@@ -132,12 +133,14 @@ export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
       }
     `,
     revalidate: 3600, // 1 hour
+    tags: ["posts"],
   });
 });
 
 /**
  * Fetch a single blog post by slug with 1-hour cache.
  * Uses cache deduplication - multiple calls in same render pass only fetch once.
+ * Tag: 'posts' enables on-demand revalidation.
  */
 export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
   const results = await sanityFetch({
@@ -181,6 +184,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null
     `,
     params: { slug },
     revalidate: 3600, // 1 hour
+    tags: ["posts", `post:${slug}`],
   });
 
   return results[0] || null;
@@ -189,6 +193,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null
 /**
  * Fetch related posts (optimized - only fetch needed fields).
  * Excludes the current post and limits to specified number.
+ * Tag: 'posts' enables on-demand revalidation.
  */
 export const getRelatedPosts = cache(async (
   currentPostId: string,
@@ -213,12 +218,14 @@ export const getRelatedPosts = cache(async (
     `,
     params: { id: currentPostId },
     revalidate: 3600, // 1 hour
+    tags: ["posts"],
   });
 });
 
 /**
  * Fetch all blog posts (for generateStaticParams).
  * Returns minimal data needed for path generation.
+ * Tag: 'posts' enables on-demand revalidation.
  */
 export const getAllPostSlugs = cache(async (): Promise<Array<{ slug: string }>> => {
   return sanityFetch({
@@ -228,6 +235,7 @@ export const getAllPostSlugs = cache(async (): Promise<Array<{ slug: string }>> 
       }
     `,
     revalidate: 3600, // 1 hour
+    tags: ["posts"],
   });
 });
 
@@ -238,6 +246,7 @@ export const getAllPostSlugs = cache(async (): Promise<Array<{ slug: string }>> 
 /**
  * Fetch all active career openings with 30-minute cache.
  * Job postings change moderately frequently.
+ * Tag: 'careers' enables on-demand revalidation.
  */
 export const getCareers = cache(async (): Promise<Career[]> => {
   return sanityFetch({
@@ -265,11 +274,13 @@ export const getCareers = cache(async (): Promise<Career[]> => {
       }
     `,
     revalidate: 1800, // 30 minutes
+    tags: ["careers"],
   });
 });
 
 /**
  * Fetch a single career by slug with 30-minute cache.
+ * Tag: 'careers' enables on-demand revalidation.
  */
 export const getCareerBySlug = cache(async (slug: string): Promise<Career | null> => {
   const results = await sanityFetch({
@@ -298,6 +309,7 @@ export const getCareerBySlug = cache(async (slug: string): Promise<Career | null
     `,
     params: { slug },
     revalidate: 1800, // 30 minutes
+    tags: ["careers", `career:${slug}`],
   });
 
   return results[0] || null;
@@ -305,6 +317,7 @@ export const getCareerBySlug = cache(async (slug: string): Promise<Career | null
 
 /**
  * Fetch all career slugs (for generateStaticParams).
+ * Tag: 'careers' enables on-demand revalidation.
  */
 export const getAllCareerSlugs = cache(async (): Promise<Array<{ slug: string }>> => {
   return sanityFetch({
@@ -314,6 +327,7 @@ export const getAllCareerSlugs = cache(async (): Promise<Array<{ slug: string }>
       }
     `,
     revalidate: 1800, // 30 minutes
+    tags: ["careers"],
   });
 });
 
@@ -324,6 +338,7 @@ export const getAllCareerSlugs = cache(async (): Promise<Array<{ slug: string }>
 /**
  * Fetch all team members with 1-hour cache.
  * Team composition changes infrequently.
+ * Tag: 'team' enables on-demand revalidation.
  */
 export const getTeamMembers = cache(async (): Promise<TeamMember[]> => {
   return sanityFetch({
@@ -352,6 +367,7 @@ export const getTeamMembers = cache(async (): Promise<TeamMember[]> => {
       }
     `,
     revalidate: 3600, // 1 hour
+    tags: ["team"],
   });
 });
 
@@ -362,6 +378,7 @@ export const getTeamMembers = cache(async (): Promise<TeamMember[]> => {
 /**
  * Fetch all active services with 24-hour cache.
  * Service descriptions change very rarely.
+ * Tag: 'services' enables on-demand revalidation.
  */
 export const getServices = cache(async (): Promise<any[]> => {
   return sanityFetch({
@@ -379,6 +396,7 @@ export const getServices = cache(async (): Promise<any[]> => {
       }
     `,
     revalidate: 86400, // 24 hours
+    tags: ["services"],
   });
 });
 
@@ -388,6 +406,7 @@ export const getServices = cache(async (): Promise<any[]> => {
 
 /**
  * Fetch all active testimonials with 1-hour cache.
+ * Tag: 'testimonials' enables on-demand revalidation.
  */
 export const getTestimonials = cache(async (): Promise<any[]> => {
   return sanityFetch({
@@ -410,11 +429,13 @@ export const getTestimonials = cache(async (): Promise<any[]> => {
       }
     `,
     revalidate: 3600, // 1 hour
+    tags: ["testimonials"],
   });
 });
 
 /**
  * Fetch all success stories with 1-hour cache.
+ * Tag: 'successStories' enables on-demand revalidation.
  */
 export const getSuccessStories = cache(async (): Promise<any[]> => {
   return sanityFetch({
@@ -438,5 +459,6 @@ export const getSuccessStories = cache(async (): Promise<any[]> => {
       }
     `,
     revalidate: 3600, // 1 hour
+    tags: ["successStories"],
   });
 });
