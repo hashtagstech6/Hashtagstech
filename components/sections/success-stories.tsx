@@ -160,7 +160,6 @@ export default function SuccessStories() {
                       alt={client.alt}
                       fill
                       className="object-cover"
-                      unoptimized={client.imageUrl?.startsWith('https://') ?? false}
                     />
                   </div>
                 </div>
@@ -179,7 +178,6 @@ export default function SuccessStories() {
                     alt={client.alt}
                     fill
                     className="object-cover"
-                    unoptimized={client.imageUrl?.startsWith('https://') ?? false}
                   />
                 </div>
               </div>

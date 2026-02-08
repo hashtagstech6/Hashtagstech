@@ -43,7 +43,6 @@ export function BlogCard({ post }: { post: BlogPost }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             onError={() => setImageError(true)}
-            unoptimized={post.mainImage.startsWith('https://')}
           />
         )}
       </Link>
@@ -112,7 +111,6 @@ export function RelatedPostCard({ post }: { post: BlogPost }) {
             className="object-cover hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
             onError={() => setImageError(true)}
-            unoptimized={post.mainImage.startsWith('https://')}
           />
         )}
       </div>
@@ -155,7 +153,6 @@ export function BlogFeaturedImage({ src, alt }: { src: string; alt: string }) {
           priority
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
           onError={() => setImageError(true)}
-          unoptimized={src.startsWith('https://')}
         />
       )}
     </div>
