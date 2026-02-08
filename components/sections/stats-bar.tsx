@@ -24,7 +24,7 @@ const stats: Stat[] = [
     id: "1",
     prefix: "Since",
     label: "",
-    value: 2019,
+    value: 2021,
     suffix: "",
   },
   {
@@ -54,7 +54,7 @@ const stats: Stat[] = [
  * - Full width red/coral background
  * - 4 stats in a single inline row
  * - Checkmark icons before each stat
- * - Format: "✓ Since 2019  ✓ 40+ Global Brands  ✓ 25+ Industries  ✓ 96% Rating"
+ * - Format: "✓ Since 2021  ✓ 40+ Global Brands  ✓ 25+ Industries  ✓ 96% Rating"
  *
  * Features:
  * - GSAP counter animation (0 to target value)
