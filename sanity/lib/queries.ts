@@ -215,6 +215,11 @@ export const getRelatedPosts = cache(async (
           },
           alt
         },
+        author-> {
+          _id,
+          name,
+          "slug": slug.current
+        },
         publishedAt
       }
     `,

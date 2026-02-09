@@ -286,7 +286,7 @@ export default async function BlogPostPage({
                   More Articles
                 </h2>
                 <div className="grid md:grid-cols-3 gap-8">
-                  {relatedPosts.map((relatedPost) => {
+                  {relatedPosts.filter(Boolean).map((relatedPost) => {
                     const adaptedPost = {
                       id: relatedPost._id,
                       title: relatedPost.title,
