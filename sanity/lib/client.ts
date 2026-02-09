@@ -99,15 +99,17 @@ export async function sanityFetch<constQueryString extends string>({
   }
 
   // Next.js 15 cache configuration:
-  // When tags are provided, use tag-based caching (revalidate: false)
-  // Otherwise, use time-based revalidation
-  // Note: Don't specify cache option when using revalidate to avoid warnings
-  const nextConfig: { revalidate?: number | false; tags?: string[] } = {
-    tags,
-  };
+  // Use both time-based AND tag-based revalidation for best of both worlds
+  // - Time-based: auto-refresh after specified seconds
+  // - Tag-based: immediate refresh when webhook triggers
+  const nextConfig: { revalidate?: number; tags?: string[] } = {};
+
   if (tags.length) {
-    nextConfig.revalidate = false;
+    // When tags are provided, use BOTH revalidate time AND tags
+    nextConfig.revalidate = revalidate;
+    nextConfig.tags = tags;
   } else {
+    // When no tags, use only time-based revalidation
     nextConfig.revalidate = revalidate;
   }
 

@@ -147,8 +147,12 @@ export async function POST(request: Request) {
  * Process webhook payload and revalidate caches
  */
 async function processWebhookPayload(payload: any) {
-  // Extract document info
-  const { _type, slug, operation } = payload;
+  // DEBUG: Log full payload to see what Sanity sends
+  console.log("🔍 Webhook payload:", JSON.stringify(payload, null, 2));
+
+  // Extract document info - handle different payload formats
+  // Sanity may send: { _id, _type, slug: { current: "..." } } or { _id, _type, slug: {...}, ... }
+  const { _type, slug, operation, ids } = payload;
 
   if (!_type) {
     console.error("❌ Webhook: Missing _type in payload");
@@ -175,11 +179,31 @@ async function processWebhookPayload(payload: any) {
     console.log(`✅ Revalidated tag: ${tag}`);
   }
 
+  // Extract slug value from different possible formats
+  let slugValue: string | undefined;
+
+  if (slug) {
+    // Format 1: { current: "my-slug" }
+    if (typeof slug === "object" && "current" in slug) {
+      slugValue = slug.current;
+    }
+    // Format 2: Direct string
+    else if (typeof slug === "string") {
+      slugValue = slug;
+    }
+    // Format 3: Slug object with _type
+    else if (typeof slug === "object" && "_type" in slug && "current" in slug) {
+      slugValue = slug.current;
+    }
+  }
+
   // Revalidate specific path if slug is available
-  if (config.pathPrefix && slug?.current) {
-    const path = `${config.pathPrefix}/${slug.current}`;
+  if (config.pathPrefix && slugValue) {
+    const path = `${config.pathPrefix}/${slugValue}`;
     revalidatePath(path);
     console.log(`✅ Revalidated path: ${path}`);
+  } else if (config.pathPrefix) {
+    console.log(`⚠️ Could not revalidate specific path - slug format:`, JSON.stringify(slug));
   }
 
   // Also revalidate the listing page
@@ -194,7 +218,7 @@ async function processWebhookPayload(payload: any) {
   return NextResponse.json({
     revalidated: true,
     type: _type,
-    slug: slug?.current,
+    slug: slugValue,
     operation,
     tags: config.tags,
   });
