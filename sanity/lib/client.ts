@@ -102,7 +102,7 @@ export async function sanityFetch<constQueryString extends string>({
   // Use both time-based AND tag-based revalidation for best of both worlds
   // - Time-based: auto-refresh after specified seconds
   // - Tag-based: immediate refresh when webhook triggers
-  const nextConfig: { revalidate?: number; tags?: string[] } = {};
+  const nextConfig: { revalidate?: number | false; tags?: string[] } = {};
 
   if (tags.length) {
     // When tags are provided, use BOTH revalidate time AND tags
