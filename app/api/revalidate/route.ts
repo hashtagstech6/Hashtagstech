@@ -180,17 +180,3 @@ export async function GET() {
     environment: process.env.NODE_ENV,
   });
 }
-
-/**
- * GET handler for webhook testing
- * Returns configuration info for debugging
- */
-export async function GET() {
-  return NextResponse.json({
-    webhook: "/api/revalidate",
-    status: WEBHOOK_SECRET ? "configured" : "missing-secret",
-    supportedTypes: ["post", "career", "teamMember", "service", "testimonial", "successStory"],
-    environment: process.env.NODE_ENV,
-    documentation: "See inline comments in route.ts for setup instructions",
-  });
-}
