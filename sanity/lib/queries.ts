@@ -143,7 +143,7 @@ export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
  * Tag: 'posts' enables on-demand revalidation.
  */
 export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
-  const results = await sanityFetch({
+  const post = await sanityFetch({
     query: `
       *[_type == "post" && slug.current == $slug][0]{
         _id,
@@ -187,7 +187,7 @@ export const getPostBySlug = cache(async (slug: string): Promise<BlogPost | null
     tags: ["posts", `post:${slug}`],
   });
 
-  return results[0] || null;
+  return post || null;
 });
 
 /**
@@ -283,7 +283,7 @@ export const getCareers = cache(async (): Promise<Career[]> => {
  * Tag: 'careers' enables on-demand revalidation.
  */
 export const getCareerBySlug = cache(async (slug: string): Promise<Career | null> => {
-  const results = await sanityFetch({
+  const career = await sanityFetch({
     query: `
       *[_type == "career" && slug.current == $slug && isActive == true][0]{
         _id,
@@ -312,7 +312,7 @@ export const getCareerBySlug = cache(async (slug: string): Promise<Career | null
     tags: ["careers", `career:${slug}`],
   });
 
-  return results[0] || null;
+  return career || null;
 });
 
 /**
