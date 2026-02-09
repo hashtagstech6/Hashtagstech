@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 
     // Verify signature using Sanity's official package
     const isValid = await isValidSignature(
-      new TextEncoder().encode(rawBody),
+      rawBody,
       signature,
       WEBHOOK_SECRET ?? ""
     );
