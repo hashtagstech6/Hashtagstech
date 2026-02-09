@@ -97,7 +97,7 @@ interface TeamMember {
  * Tag: 'posts' enables on-demand revalidation.
  */
 export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
-  return sanityFetch({
+  const posts = await sanityFetch({
     query: `
       *[_type == "post"] | order(publishedAt desc)[0...${limit}] {
         _id,
@@ -135,6 +135,8 @@ export const getPosts = cache(async (limit = 10): Promise<BlogPost[]> => {
     revalidate: 3600, // 1 hour
     tags: ["posts"],
   });
+
+  return posts || [];
 });
 
 /**
@@ -199,7 +201,7 @@ export const getRelatedPosts = cache(async (
   currentPostId: string,
   limit = 3
 ): Promise<BlogPost[]> => {
-  return sanityFetch({
+  const posts = await sanityFetch({
     query: `
       *[_type == "post" && _id != $id] | order(publishedAt desc)[0...${limit}]{
         _id,
@@ -220,6 +222,8 @@ export const getRelatedPosts = cache(async (
     revalidate: 3600, // 1 hour
     tags: ["posts"],
   });
+
+  return posts || [];
 });
 
 /**
