@@ -31,7 +31,7 @@ export function getClient(): SanityClient | null {
       projectId,
       dataset,
       apiVersion,
-      useCdn: process.env.NODE_ENV === "production", // Enable CDN in production for better performance
+      useCdn: false, // Disable CDN when using ISR with webhooks - Next.js handles caching
       stega: {
         enabled: process.env.NODE_ENV === "development",
         studioUrl: "/studio",
