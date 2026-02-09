@@ -111,6 +111,12 @@ export async function generateMetadata({
 }
 
 /**
+ * Allow dynamic params for blog posts
+ * This enables ISR to generate pages for new posts added after build
+ */
+export const dynamicParams = true;
+
+/**
  * Revalidation time for ISR (1 hour)
  * Optimized for Next.js 15 caching
  */

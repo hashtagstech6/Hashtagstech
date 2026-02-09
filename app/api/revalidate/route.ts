@@ -1,18 +1,19 @@
-import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
-import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
+import { type NextRequest, NextResponse } from "next/server";
+import { parseBody } from "next-sanity/webhook";
 
 /**
  * POST /api/revalidate
  *
- * Sanity webhook endpoint for on-demand cache revalidation.
+ * Sanity webhook endpoint for on-demand cache revalidation using the official
+ * next-sanity webhook pattern.
  *
  * When content is published/unpublished in Sanity Studio, this endpoint
  * receives a webhook and immediately revalidates the affected cache tags
  * and paths.
  *
  * Security:
- * - Uses Sanity's official @sanity/webhook package for signature verification
+ * - Uses next-sanity's parseBody for signature verification
  * - Rejects requests without valid signatures
  *
  * Supported document types:
@@ -31,27 +32,18 @@ import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
  * 5. Projection: Include _id, _type, slug.current
  */
 
+type WebhookPayload = {
+  _type: string;
+  _id?: string;
+  slug?: string | { current: string };
+  operation?: string;
+};
+
 // Get webhook secret from environment
 const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
 
 if (!WEBHOOK_SECRET && process.env.NODE_ENV === "production") {
   console.warn("⚠️ SANITY_WEBHOOK_SECRET not set - webhook will reject all requests");
-}
-
-/**
- * Read raw body from request stream
- * Required for proper signature verification
- */
-async function readBody(readable: ReadableStream<Uint8Array>): Promise<string> {
-  const chunks = [];
-  const reader = readable.getReader();
-  let result;
-
-  while (!(result = await reader.read()).done) {
-    chunks.push(result.value);
-  }
-
-  return Buffer.concat(chunks).toString("utf-8");
 }
 
 /**
@@ -86,141 +78,106 @@ function getRevalidationConfig(docType: string) {
   return configs[docType];
 }
 
-export async function POST(request: Request) {
+/**
+ * Extract slug value from different possible formats
+ */
+function extractSlugValue(slug: string | { current: string } | undefined): string | undefined {
+  if (!slug) return undefined;
+  if (typeof slug === "string") return slug;
+  if (typeof slug === "object" && "current" in slug) return slug.current;
+  return undefined;
+}
+
+export async function POST(req: NextRequest) {
   try {
-    // Get raw body FIRST for signature verification
-    const rawBody = await readBody(request.body!);
-
-    // Get signature from Sanity's official header name
-    const signature = request.headers.get(SIGNATURE_HEADER_NAME);
-
-    if (!signature) {
-      console.error("❌ Webhook: Missing signature header");
-      console.error("❌ Expected header:", SIGNATURE_HEADER_NAME);
-      return NextResponse.json(
-        { error: "Unauthorized", message: "Missing signature" },
-        { status: 401 }
-      );
+    if (!WEBHOOK_SECRET) {
+      return new Response("Missing environment variable SANITY_WEBHOOK_SECRET", { status: 500 });
     }
 
-    // Verify signature using Sanity's official package
-    const isValid = await isValidSignature(
-      rawBody,
-      signature,
-      WEBHOOK_SECRET ?? ""
+    // Use next-sanity's parseBody for signature verification
+    const { isValidSignature, body } = await parseBody<WebhookPayload>(
+      req,
+      WEBHOOK_SECRET
     );
 
-    if (!isValid) {
-      console.error("❌ Webhook: Invalid signature");
-      console.error("❌ Signature:", signature);
-      return NextResponse.json(
-        { error: "Unauthorized", message: "Invalid signature" },
-        { status: 401 }
-      );
+    if (!isValidSignature) {
+      const message = "Invalid signature";
+      return new Response(JSON.stringify({ message, isValidSignature, body }), {
+        status: 401,
+      });
+    }
+
+    if (!body?._type) {
+      const message = "Bad Request";
+      return new Response(JSON.stringify({ message, body }), { status: 400 });
     }
 
     console.log("✅ Webhook signature verified");
+    console.log("🔍 Webhook payload:", JSON.stringify(body, null, 2));
 
-    // Parse webhook payload
-    let payload;
-    try {
-      payload = JSON.parse(rawBody);
-    } catch {
-      console.error("❌ Webhook: Invalid JSON payload");
-      return NextResponse.json(
-        { error: "Bad Request", message: "Invalid JSON" },
-        { status: 400 }
-      );
+    const { _type, slug, operation } = body;
+
+    // Get revalidation config for this document type
+    const config = getRevalidationConfig(_type);
+
+    if (!config) {
+      console.log(`ℹ️ Webhook: No revalidation config for _type="${_type}"`);
+      return NextResponse.json({
+        revalidated: false,
+        message: `No revalidation configured for type: ${_type}`,
+      });
     }
 
-    return processWebhookPayload(payload);
+    // Revalidate cache tags
+    for (const tag of config.tags) {
+      revalidateTag(tag);
+      console.log(`✅ Revalidated tag: ${tag}`);
+    }
+
+    // Extract slug value
+    const slugValue = extractSlugValue(slug);
+
+    // Revalidate specific path if slug is available
+    if (config.pathPrefix && slugValue) {
+      const path = `${config.pathPrefix}/${slugValue}`;
+      revalidatePath(path);
+      console.log(`✅ Revalidated path: ${path}`);
+    } else if (config.pathPrefix) {
+      console.log(`⚠️ Could not revalidate specific path - slug format:`, JSON.stringify(slug));
+    }
+
+    // Also revalidate the listing page
+    if (config.pathPrefix) {
+      revalidatePath(config.pathPrefix);
+      console.log(`✅ Revalidated path: ${config.pathPrefix}`);
+    }
+
+    // Log successful revalidation
+    console.log(`✅ Webhook: Revalidated ${_type} (${operation || "unknown"})`);
+
+    return NextResponse.json({
+      revalidated: true,
+      type: _type,
+      slug: slugValue,
+      operation,
+      tags: config.tags,
+    });
   } catch (error) {
     console.error("❌ Webhook error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error", message: String(error) },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: String(error) }), { status: 500 });
   }
 }
 
 /**
- * Process webhook payload and revalidate caches
+ * GET handler for webhook testing
+ * Returns configuration info for debugging
  */
-async function processWebhookPayload(payload: any) {
-  // DEBUG: Log full payload to see what Sanity sends
-  console.log("🔍 Webhook payload:", JSON.stringify(payload, null, 2));
-
-  // Extract document info - handle different payload formats
-  // Sanity may send: { _id, _type, slug: { current: "..." } } or { _id, _type, slug: {...}, ... }
-  const { _type, slug, operation, ids } = payload;
-
-  if (!_type) {
-    console.error("❌ Webhook: Missing _type in payload");
-    return NextResponse.json(
-      { error: "Bad Request", message: "Missing _type" },
-      { status: 400 }
-    );
-  }
-
-  // Get revalidation config for this document type
-  const config = getRevalidationConfig(_type);
-
-  if (!config) {
-    console.log(`ℹ️ Webhook: No revalidation config for _type="${_type}"`);
-    return NextResponse.json({
-      revalidated: false,
-      message: `No revalidation configured for type: ${_type}`,
-    });
-  }
-
-  // Revalidate cache tags
-  for (const tag of config.tags) {
-    revalidateTag(tag);
-    console.log(`✅ Revalidated tag: ${tag}`);
-  }
-
-  // Extract slug value from different possible formats
-  let slugValue: string | undefined;
-
-  if (slug) {
-    // Format 1: { current: "my-slug" }
-    if (typeof slug === "object" && "current" in slug) {
-      slugValue = slug.current;
-    }
-    // Format 2: Direct string
-    else if (typeof slug === "string") {
-      slugValue = slug;
-    }
-    // Format 3: Slug object with _type
-    else if (typeof slug === "object" && "_type" in slug && "current" in slug) {
-      slugValue = slug.current;
-    }
-  }
-
-  // Revalidate specific path if slug is available
-  if (config.pathPrefix && slugValue) {
-    const path = `${config.pathPrefix}/${slugValue}`;
-    revalidatePath(path);
-    console.log(`✅ Revalidated path: ${path}`);
-  } else if (config.pathPrefix) {
-    console.log(`⚠️ Could not revalidate specific path - slug format:`, JSON.stringify(slug));
-  }
-
-  // Also revalidate the listing page
-  if (config.pathPrefix) {
-    revalidatePath(config.pathPrefix);
-    console.log(`✅ Revalidated path: ${config.pathPrefix}`);
-  }
-
-  // Log successful revalidation
-  console.log(`✅ Webhook: Revalidated ${_type} (${operation || "unknown"})`);
-
+export async function GET() {
   return NextResponse.json({
-    revalidated: true,
-    type: _type,
-    slug: slugValue,
-    operation,
-    tags: config.tags,
+    webhook: "/api/revalidate",
+    status: WEBHOOK_SECRET ? "configured" : "missing-secret",
+    supportedTypes: ["post", "career", "teamMember", "service", "testimonial", "successStory"],
+    environment: process.env.NODE_ENV,
   });
 }
 
