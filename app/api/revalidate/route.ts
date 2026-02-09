@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
-import crypto from "crypto";
+import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
 
 /**
  * POST /api/revalidate
@@ -12,7 +12,7 @@ import crypto from "crypto";
  * and paths.
  *
  * Security:
- * - Uses HMAC signature verification with SANITY_WEBHOOK_SECRET
+ * - Uses Sanity's official @sanity/webhook package for signature verification
  * - Rejects requests without valid signatures
  *
  * Supported document types:
@@ -39,50 +39,19 @@ if (!WEBHOOK_SECRET && process.env.NODE_ENV === "production") {
 }
 
 /**
- * Verify webhook signature from Sanity
- *
- * Sanity sends signature in format: t=timestamp,v1=signature
- * Example: "t=1770567243957,v1=9q_uHIMotATZtUJ3KR_PgKY6LhGRHJkMFCxn--ZEtJ0"
+ * Read raw body from request stream
+ * Required for proper signature verification
  */
-function verifySignature(body: string, signature: string): boolean {
-  if (!WEBHOOK_SECRET) return false;
+async function readBody(readable: ReadableStream<Uint8Array>): Promise<string> {
+  const chunks = [];
+  const reader = readable.getReader();
+  let result;
 
-  try {
-    // Parse Sanity's signature format: t=timestamp,v1=signature
-    const parts = signature.split(",");
-    let signatureValue = "";
-
-    for (const part of parts) {
-      if (part.startsWith("v1=")) {
-        signatureValue = part.substring(3);
-        break;
-      }
-    }
-
-    if (!signatureValue) {
-      console.error("❌ Could not extract v1 signature from:", signature);
-      return false;
-    }
-
-    // Compute HMAC signature using the same method as Sanity
-    const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
-    hmac.update(body, "utf8");
-    const digest = hmac.digest("base64");
-
-    // Compare signatures
-    const isValid = digest === signatureValue;
-
-    if (!isValid) {
-      console.error("❌ Signature mismatch:");
-      console.error("   Expected:", digest);
-      console.error("   Received:", signatureValue);
-    }
-
-    return isValid;
-  } catch (error) {
-    console.error("❌ Signature verification error:", error);
-    return false;
+  while (!(result = await reader.read()).done) {
+    chunks.push(result.value);
   }
+
+  return Buffer.concat(chunks).toString("utf-8");
 }
 
 /**
@@ -119,32 +88,31 @@ function getRevalidationConfig(docType: string) {
 
 export async function POST(request: Request) {
   try {
-    // DEBUG: Log ALL headers to see what Sanity is sending
-    const allHeaders: Record<string, string> = {};
-    request.headers.forEach((value, key) => {
-      allHeaders[key] = value;
-    });
-    console.log("🔍 Webhook headers received:", JSON.stringify(allHeaders, null, 2));
+    // Get raw body FIRST for signature verification
+    const rawBody = await readBody(request.body!);
 
-    // Get signature from headers
-    // Sanity sends as: sanity-webhook-signature
-    const signature = request.headers.get("sanity-webhook-signature");
+    // Get signature from Sanity's official header name
+    const signature = request.headers.get(SIGNATURE_HEADER_NAME);
 
     if (!signature) {
       console.error("❌ Webhook: Missing signature header");
-      console.error("❌ Available headers:", Object.keys(allHeaders));
+      console.error("❌ Expected header:", SIGNATURE_HEADER_NAME);
       return NextResponse.json(
         { error: "Unauthorized", message: "Missing signature" },
         { status: 401 }
       );
     }
 
-    // Get raw body FIRST (can only read stream once)
-    const rawBody = await request.text();
+    // Verify signature using Sanity's official package
+    const isValid = await isValidSignature(
+      new TextEncoder().encode(rawBody),
+      signature,
+      WEBHOOK_SECRET ?? ""
+    );
 
-    // Verify signature
-    if (!verifySignature(rawBody, signature)) {
+    if (!isValid) {
       console.error("❌ Webhook: Invalid signature");
+      console.error("❌ Signature:", signature);
       return NextResponse.json(
         { error: "Unauthorized", message: "Invalid signature" },
         { status: 401 }
