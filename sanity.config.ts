@@ -21,6 +21,7 @@ import { teamMemberType } from "./sanity/schemaTypes/teamMemberType";
 import { globalPartnerType } from "./sanity/schemaTypes/globalPartnerType";
 import { clientType } from "./sanity/schemaTypes/clientType";
 import { clientLogoType } from "./sanity/schemaTypes/clientLogoType";
+import { ceoSectionType } from "./sanity/schemaTypes/ceoSectionType";
 
 // Define schema types array
 const schemaTypes = [
@@ -35,6 +36,7 @@ const schemaTypes = [
   globalPartnerType,
   clientType,
   clientLogoType,
+  ceoSectionType,
 ];
 
 export default defineConfig({
@@ -112,6 +114,12 @@ export default defineConfig({
               .title("Team")
               .icon(() => "👥")
               .child(S.documentTypeList("teamMember").title("Team Members")),
+
+            // CEO Section
+            S.listItem()
+              .title("CEO Section")
+              .icon(() => "👤")
+              .child(S.documentTypeList("ceoSection").title("CEO Section")),
 
             // Partners & Clients section
             S.listItem()

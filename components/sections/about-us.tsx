@@ -42,7 +42,12 @@ const aboutBenefits = [
   },
 ];
 
-export default function AboutUs() {
+interface AboutUsProps {
+  /** When true, hides the CTA button (used on the About page where user is already there) */
+  hideButton?: boolean;
+}
+
+export default function AboutUs({ hideButton = false }: AboutUsProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -142,13 +147,15 @@ export default function AboutUs() {
                 })}
               </div>
 
-              {/* CTA Button */}
-              <div className="mt-8">
-                <MagneticButton href="#learn-more" variant="primary">
-                  Learn More About Us
-                  <ArrowRight className="w-4 h-4" />
-                </MagneticButton>
-              </div>
+              {/* CTA Button - hidden on About page */}
+              {!hideButton && (
+                <div className="mt-8">
+                  <MagneticButton href="/about" variant="primary">
+                    Learn More About Us
+                    <ArrowRight className="w-4 h-4" />
+                  </MagneticButton>
+                </div>
+              )}
             </div>
           </ScrollReveal>
 

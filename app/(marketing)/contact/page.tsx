@@ -61,11 +61,13 @@ export default function ContactPage() {
         {/* Contact Info Section */}
         <section className="py-16 md:py-24 bg-muted">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {/* UAE Office */}
+            <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              {/* Email */}
               <div className="text-center">
-                <h3 className="text-xl font-bold mb-3">UAE Office</h3>
-                <p className="text-muted-foreground mb-2">Dubai, United Arab Emirates</p>
+                <h3 className="text-xl font-bold mb-3">Email Us</h3>
+                <p className="text-muted-foreground mb-2">
+                  We&apos;d love to hear from you
+                </p>
                 <p className="text-sm text-muted-foreground">
                   <a
                     href="mailto:info@hashtagstech.com"
@@ -76,33 +78,14 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              {/* USA Office */}
+              {/* Operating Locations */}
               <div className="text-center">
-                <h3 className="text-xl font-bold mb-3">USA Office</h3>
-                <p className="text-muted-foreground mb-2">New York, USA</p>
-                <p className="text-sm text-muted-foreground">
-                  <a
-                    href="mailto:usa@hashtagstech.com"
-                    className="hover:text-primary transition-colors"
-                  >
-                    usa@hashtagstech.com
-                  </a>
-                </p>
-              </div>
-
-              {/* 24/7 Support */}
-              <div className="text-center">
-                <h3 className="text-xl font-bold mb-3">24/7 Support</h3>
+                <h3 className="text-xl font-bold mb-3">Our Presence</h3>
                 <p className="text-muted-foreground mb-2">
-                  Available round the clock
+                  Operating in Pakistan, Dubai &amp; Germany
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  <a
-                    href="mailto:support@hashtagstech.com"
-                    className="hover:text-primary transition-colors"
-                  >
-                    support@hashtagstech.com
-                  </a>
+                  Available 24/7 for support
                 </p>
               </div>
             </div>

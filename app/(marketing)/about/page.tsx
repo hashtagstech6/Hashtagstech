@@ -18,7 +18,7 @@ export default function AboutPage() {
         pill="Company"
         breadcrumb={[{ label: "About" }]}
       />
-      <AboutUs />
+      <AboutUs hideButton />
       <div className="py-10" />
       <GlobalPartners />
       <CeoMessage />

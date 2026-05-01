@@ -60,9 +60,9 @@ export default async function Footer() {
       { label: "Support", email: "support@hashtagstech.com" },
     ],
     offices: [
-      { city: "Dubai", country: "UAE", address: "Business Bay, Dubai" },
-      { city: "New York", country: "USA", address: "Manhattan, NY 10001" },
-      { city: "Muscat", country: "Oman", address: "Al Seeb, Muscat" },
+      { city: "Pakistan", country: "PK", address: "Karachi, Pakistan" },
+      { city: "Dubai", country: "UAE", address: "Dubai, UAE" },
+      { city: "Germany", country: "DE", address: "Germany" },
     ],
   };
 

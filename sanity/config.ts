@@ -19,6 +19,7 @@ import { successStoryType } from "./schemaTypes/successStoryType";
 import { teamMemberType } from "./schemaTypes/teamMemberType";
 import { globalPartnerType } from "./schemaTypes/globalPartnerType";
 import { clientType } from "./schemaTypes/clientType";
+import { ceoSectionType } from "./schemaTypes/ceoSectionType";
 
 // Define schema types array
 export const schemaTypes = [
@@ -32,6 +33,7 @@ export const schemaTypes = [
   teamMemberType,
   globalPartnerType,
   clientType,
+  ceoSectionType,
 ];
 
 /**
@@ -109,6 +111,12 @@ export default defineConfig({
               .title("Team")
               .icon(() => "👥")
               .child(S.documentTypeList("teamMember").title("Team Members")),
+
+            // CEO Section
+            S.listItem()
+              .title("CEO Section")
+              .icon(() => "👤")
+              .child(S.documentTypeList("ceoSection").title("CEO Section")),
 
             // Partners & Clients section
             S.listItem()
