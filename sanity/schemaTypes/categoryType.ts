@@ -33,8 +33,8 @@ export const categoryType = defineType({
     defineField({
       name: "color",
       type: "string",
-      description: "Hex color for category badge (e.g., #F26B6B)",
-      initialValue: "#F26B6B",
+      description: "Hex color for category badge (e.g., #b81c1c)",
+      initialValue: "#b81c1c",
     }),
   ],
 

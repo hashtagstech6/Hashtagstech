@@ -70,10 +70,10 @@ export default function ContactPage() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   <a
-                    href="mailto:info@hashtagstech.com"
+                    href="mailto:hello@hashtagstech.com"
                     className="hover:text-primary transition-colors"
                   >
-                    info@hashtagstech.com
+                    hello@hashtagstech.com
                   </a>
                 </p>
               </div>
@@ -82,7 +82,7 @@ export default function ContactPage() {
               <div className="text-center">
                 <h3 className="text-xl font-bold mb-3">Our Presence</h3>
                 <p className="text-muted-foreground mb-2">
-                  Operating in Pakistan, Dubai &amp; Germany
+                  Operating in Europe, Middle East &amp; Pakistan
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Available 24/7 for support

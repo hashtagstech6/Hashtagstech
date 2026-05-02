@@ -39,10 +39,9 @@ export interface ChatMessage {
 export const defaultHashtagTechConfig: ChatWidgetConfig = {
   companyName: "Hashtag Tech",
   companyLogo: "/logo-horizontal.webp",
-  primaryColor: "#F26B6B",
-  agentName: "Sarah",
+  primaryColor: "#b81c1c",
+  agentName: "Xena",
   agentAvatar: "", // Empty string triggers Bot icon fallback
   welcomeMessage: "Hi! How can I help you today?",
   enableVideoCall: false,
 };
-

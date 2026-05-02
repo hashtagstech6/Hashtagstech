@@ -68,7 +68,7 @@ export default function PrivacyPage() {
               If you have any questions about this Privacy Policy, please contact us:
             </p>
             <ul className="list-none pl-0 space-y-2 mt-4">
-              <li><strong>Email:</strong> info@hashtagstech.com</li>
+              <li><strong>Email:</strong> hello@hashtagstech.com</li>
               <li><strong>Address:</strong> Business Bay, Dubai, UAE</li>
             </ul>
           </div>

@@ -55,14 +55,14 @@ export default async function Footer() {
 
   const contactInfo = {
     emails: [
-      { label: "General Inquiries", email: "info@hashtagstech.com" },
+      { label: "General Inquiries", email: "hello@hashtagstech.com" },
       { label: "Careers", email: "careers@hashtagstech.com" },
       { label: "Support", email: "support@hashtagstech.com" },
     ],
     offices: [
-      { city: "Pakistan", country: "PK", address: "Karachi, Pakistan" },
-      { city: "Dubai", country: "UAE", address: "Dubai, UAE" },
-      { city: "Germany", country: "DE", address: "Germany" },
+      { city: "Europe", country: "" },
+      { city: "Middle East", country: "" },
+      { city: "Pakistan", country: "" },
     ],
   };
 
@@ -224,7 +224,7 @@ export default async function Footer() {
                       key={office.city}
                       className="text-sm text-white/60"
                     >
-                      {office.city}, {office.country}
+                      {office.city}{office.country ? `, ${office.country}` : ''}
                     </li>
                   ))}
                 </ul>
@@ -237,7 +237,7 @@ export default async function Footer() {
         {/* Copyright Bar */}
         <div className="mt-16 border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/40">
-            &copy; {currentYear} Hashtag Tech. All rights reserved.
+            Made with love at Hashtags Technology | All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-white/40">
              <Link href="/privacy" className="hover:text-white hover:no-underline transition-colors">Privacy Policy</Link>

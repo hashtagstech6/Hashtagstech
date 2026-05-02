@@ -52,9 +52,9 @@ export const ceoSectionType = defineType({
     defineField({
       name: "message",
       title: "Message",
-      type: "text",
-      rows: 6,
-      description: "The CEO's message paragraph",
+      type: "array",
+      of: [{ type: "block" }],
+      description: "The CEO's message. Use H2 for the main heading, Blockquote for the highlighted quote, and Bold/Italics as needed.",
       validation: (Rule) => Rule.required().error("Message is required"),
     }),
 

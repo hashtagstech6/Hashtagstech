@@ -58,7 +58,7 @@ export default function TermsPage() {
 
             <h2 className="text-2xl font-bold mt-12 mb-6">6. Contact Us</h2>
             <p>
-              If you have any questions about these Terms, please contact us at info@hashtagstech.com.
+              If you have any questions about these Terms, please contact us at hello@hashtagstech.com.
             </p>
           </div>
         </div>

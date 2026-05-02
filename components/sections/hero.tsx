@@ -88,7 +88,7 @@ export default function Hero() {
             {/* Location Badge */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Registered & Operating in</span>
-              <span className="font-semibold text-foreground">Pakistan, Dubai & Germany</span>
+              <span className="font-semibold text-foreground">Europe, Middle East & Pakistan</span>
               <MapPin className="w-4 h-4 text-primary" />
             </div>
 

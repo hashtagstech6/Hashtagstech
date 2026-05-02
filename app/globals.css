@@ -11,15 +11,15 @@
  * 3. Use Tailwind classes in components (never use hex values directly)
  *
  * Brand Colors:
- * - Primary: #F26B6B (red/coral accent)
+ * - Primary: #b81c1c (red accent)
  * - Surface colors for backgrounds and elevated elements
  * - Semantic colors for success, warning, error states
  */
 
 :root {
   /* ===== Brand Colors ===== */
-  --brand-primary: #C13849;
-  --brand-primary-deep: #9d2b32;
+  --brand-primary: #b81c1c;
+  --brand-primary-deep: #8c1515;
   --brand-primary-foreground: #FFFFFF;
 
   --brand-secondary: #1E1E1E;
@@ -92,7 +92,7 @@
 
 /* Stats Bar - red background */
 .section-stats {
-  --local-background: #F26B6B;
+  --local-background: var(--brand-primary);
   --local-foreground: #FFFFFF;
   background-color: var(--local-background);
   color: var(--local-foreground);

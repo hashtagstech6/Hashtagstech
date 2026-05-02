@@ -85,14 +85,15 @@ export default function Testimonials() {
 
   // Auto-play functionality
   useEffect(() => {
-    if (loading || testimonials.length === 0 || isHovered) return;
+    if (loading || testimonials.length <= 1 || isHovered) return;
 
     const timer = setInterval(() => {
-      nextTestimonial();
-    }, 5000);
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
 
     return () => clearInterval(timer);
-  }, [currentIndex, isHovered, loading, testimonials.length]); // Depend on currentIndex to reset timer on manual change
+  }, [isHovered, loading, testimonials.length]);
 
   // Variants for sliding animation
   const variants = {

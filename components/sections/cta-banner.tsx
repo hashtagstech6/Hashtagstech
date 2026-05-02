@@ -39,7 +39,7 @@ export default function CTABanner() {
               id="cta-banner-heading"
               className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-6"
             >
-              Ready to Transform Your Digital Presence?
+              Ready to transform your digital presence?
             </h2>
 
             {/* Subtext */}

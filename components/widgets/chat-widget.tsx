@@ -8,7 +8,6 @@ import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import WhatsAppButton from "./whatsapp-button";
 
 /**
  * AI-Powered Chat Widget
@@ -181,16 +180,7 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* WhatsApp Button - visible when chat is closed */}
-      <AnimatePresence>
-        {!isOpen && (
-          <WhatsAppButton
-            phoneNumber="+15551234567"
-            message="Hi Hashtag Tech! I'd like to discuss a project."
-            className="bottom-24 md:bottom-24 right-6 md:right-6"
-          />
-        )}
-      </AnimatePresence>
+      {/* WhatsApp Button removed as requested */}
 
       {/* Floating Trigger Button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -237,13 +227,21 @@ export function ChatWidget() {
           whileHover={{ scale: 1.12 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsOpen(!isOpen)}
-          className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+          className={`relative group w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
             isOpen
               ? "bg-primary hover:opacity-90 shadow-lg ring-1 ring-black/10"
               : "bg-primary shadow-lg hover:shadow-xl border border-white/20"
           }`}
           aria-label={isOpen ? "Close chat" : "Open chat"}
         >
+          {/* Hover Overlay Message */}
+          {!isOpen && (
+            <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-white text-gray-900 text-sm font-medium rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Interact with Xena AI Assistant
+              {/* Little arrow pointing right */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 bg-white rotate-45" />
+            </div>
+          )}
           <AnimatePresence mode="wait" initial={false}>
             {isOpen ? (
               <motion.div
@@ -319,7 +317,7 @@ export function ChatWidget() {
                     </div>
                     <div>
                       <h3 className="font-bold text-white tracking-wide text-sm">
-                        Hashtag Tech AI
+                        Xena
                       </h3>
                       <p className="text-xs text-white/70 font-medium">
                         {status === "streaming" ||

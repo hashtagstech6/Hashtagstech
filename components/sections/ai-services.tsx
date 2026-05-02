@@ -118,10 +118,10 @@ export default function AIServices() {
                 {/* Middle - Text Content */}
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
-                    Do You Want Us To Checkmate Your Software Challenges?
+                    Do you want us to checkmate your software challenges?
                   </h3>
-                  <p className="text-base md:text-lg text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep font-medium">
-                    Get Call from FREYA our AI Assistant Now Within 60 Seconds!!
+                  <p className="text-base md:text-lg text-primary font-medium">
+                    Chat with XENA, our AI Assistant, to get started instantly!
                   </p>
                 </div>
 

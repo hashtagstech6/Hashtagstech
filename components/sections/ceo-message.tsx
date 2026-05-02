@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/animations/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 import TiltCard from "@/components/ui/tilt-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PortableText } from "@portabletext/react";
 
 interface CeoData {
   _id: string;
@@ -16,7 +17,7 @@ interface CeoData {
     asset?: { url?: string };
     alt?: string;
   };
-  message?: string;
+  message?: any; // Portable Text array or string fallback
   consultationText?: string;
   consultationPrice?: string;
   consultationButtonText?: string;
@@ -34,9 +35,58 @@ interface CeoData {
 const fallbackData: CeoData = {
   _id: "fallback",
   name: "Kamran Khan",
-  sectionTitle: "Message From The CEO",
-  message:
-    "I am honored to lead an exceptional team committed to delivering outstanding services and achieving our goals with dedication. We take pride in partnering with industry leaders to shape the future. As a forward-thinking company, we are relentlessly working on AI and innovation to stay ahead. With our Vision 2030, we aspire to become a tech giant, create hundreds of jobs, and lead the tech industry. Join us on our journey toward excellence!",
+  sectionTitle: "Message From The Leadership",
+  message: [
+    {
+      _type: "block",
+      style: "h2",
+      children: [
+        { _type: "span", text: "Building the future\nthrough " },
+        { _type: "span", marks: ["em"], text: "intelligent" },
+        { _type: "span", text: " innovation" },
+      ],
+    },
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "Welcome. I'm proud to lead a team that doesn't simply follow industry trends — we set them. Since founding this company, our north star has been clear: " },
+        { _type: "span", marks: ["strong"], text: "harness the power of Artificial Intelligence to solve real problems" },
+        { _type: "span", text: " for businesses, entrepreneurs, and the communities they serve." },
+      ],
+    },
+    {
+      _type: "block",
+      style: "blockquote",
+      children: [
+        { _type: "span", text: "\"We don't just partner with industry leaders — we help create them.\"" },
+      ],
+    },
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "Every day, our team works relentlessly at the frontier of AI and emerging technology. We believe that staying ahead isn't a luxury — it's a responsibility we owe to every client, every partner, and every stakeholder who trusts us with their future." },
+      ],
+    },
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "Our " },
+        { _type: "span", marks: ["strong"], text: "Vision 2030" },
+        { _type: "span", text: " is bold by design: to grow into a global technology leader, generate hundreds of high-quality jobs, and become the definitive name in AI-powered solutions. We are not waiting for the future — we are actively building it, one breakthrough at a time." },
+      ],
+    },
+    {
+      _type: "block",
+      style: "normal",
+      children: [
+        { _type: "span", text: "I invite you to explore what we've built, meet the people behind it, and discover how we can grow together. " },
+        { _type: "span", marks: ["strong"], text: "Excellence is not our destination — it's our standard." },
+      ],
+    },
+  ],
   consultationText:
     "Offering 1:1 Discovery Session for Business Owners, Entrepreneurs, and Students seeking expert consultancy. (286 $ for 45 Minutes)",
   consultationButtonText: "Pay $286 & Unlock",
@@ -160,18 +210,42 @@ export default function CeoMessage() {
             <ScrollReveal>
                 <div className="space-y-6">
                     <div>
-                        <p className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-deep font-bold tracking-wide uppercase mb-2">
-                        {data.sectionTitle || "Message From The CEO"}
+                        <p className="text-sm font-bold tracking-widest uppercase mb-4 text-primary">
+                          {data.sectionTitle || "A MESSAGE FROM LEADERSHIP"}
                         </p>
                         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground tracking-tight mb-6">
-                        {data.name}
+                          {data.name}
                         </h2>
                     </div>
 
-                    <div className="text-base md:text-lg text-foreground-muted leading-relaxed space-y-4">
-                        <p>{data.message}</p>
+                    <div className="text-base md:text-lg text-foreground-muted leading-relaxed space-y-6 text-left">
+                        {typeof data.message === "string" ? (
+                          <p>{data.message}</p>
+                        ) : (
+                          <PortableText 
+                            value={data.message} 
+                            components={{
+                              block: {
+                                h2: ({children}) => <h2 className="text-4xl md:text-5xl lg:text-[2.75rem] font-medium text-foreground tracking-tight mb-8 font-serif leading-tight">{children}</h2>,
+                                blockquote: ({children}) => (
+                                  <div className="border-l-4 border-primary bg-muted p-6 my-8">
+                                    <p className="text-lg md:text-xl italic text-foreground font-serif">
+                                      {children}
+                                    </p>
+                                  </div>
+                                ),
+                                normal: ({children}) => <p>{children}</p>,
+                              },
+                              marks: {
+                                strong: ({children}) => <strong className="text-foreground font-semibold">{children}</strong>,
+                                em: ({children}) => <span className="italic text-primary">{children}</span>,
+                              }
+                            }}
+                          />
+                        )}
+                        
                         {data.consultationText && (
-                          <p className="font-bold text-foreground">
+                          <p className="font-bold text-foreground pt-4">
                             {data.consultationText}
                           </p>
                         )}

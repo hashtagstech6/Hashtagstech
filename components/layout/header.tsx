@@ -137,7 +137,7 @@ export default function Header() {
                     style={{ textShadow: "none" }}
                     onClick={() => setIsBookingOpen(true)}
                   >
-                    BOOK MEETING
+                    BOOK A MEETING
                   </MagneticButton>
               </motion.div>
             </div>

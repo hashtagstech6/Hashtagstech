@@ -103,7 +103,7 @@ BREVO_RECIPIENT_EMAIL=contact@devmatesolutions.com
 
 The website uses a CSS variables-based design system defined in `app/globals.css`:
 
-- **Brand Colors**: Primary coral red (#F26B6B)
+- **Brand Colors**: Primary coral red (#b81c1c)
 - **Surface Colors**: Backgrounds and foregrounds
 - **Animation Tokens**: Duration and easing functions
 - **Border Radius**: Consistent rounded corners
