@@ -40,13 +40,13 @@ Thumbs.db
 *.swp
 *.swo
 *~
-.claude
-CLAUDE.md
-specs/
-history/
-.specify
-module_prompts/
-screenshots/
+# .claude
+# CLAUDE.md
+# specs/
+# history/
+# .specify
+# module_prompts/
+# screenshots/
 
 # Generated files
 next-env.d.ts
