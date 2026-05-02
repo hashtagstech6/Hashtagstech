@@ -47,8 +47,7 @@ hashtag-tech/
 ├── lib/                     # Utility functions
 ├── types/                   # TypeScript type definitions
 ├── data/                    # Hardcoded data (Phase 1)
-├── public/                  # Static assets
-└── specs/                   # Specification documents
+└── public/                  # Static assets
 ```
 
 ## 🎨 Features
@@ -140,14 +139,6 @@ To generate a static export, modify `next.config.mjs` and run:
 npm run build
 ```
 
-## 📝 Specifications
-
-Project specifications, architecture decisions, and task breakdowns are documented in the `specs/` directory:
-
-- `specs/001-website-redesign/spec.md` - Feature requirements
-- `specs/001-website-redesign/plan.md` - Implementation plan
-- `specs/001-website-redesign/tasks.md` - Task breakdown
-
 ## 🧪 Testing
 
 ```bash
@@ -163,9 +154,8 @@ npx lighthouse http://localhost:3000 --view
 
 ## 📄 License
 
-Copyright © 2024 Hashtag Tech. All rights reserved.
+Copyright © 2026 Hashtag Tech. All rights reserved.
 
 ## 🔗 Links
 
 - **Website**: https://hashtagstech.com
-- **Documentation**: See `specs/` directory
