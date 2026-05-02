@@ -219,7 +219,7 @@ export default async function Footer() {
                <div className="space-y-3">
                 <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Offices</p>
                 <ul className="space-y-2">
-                  {contactInfo.offices.slice(0, 2).map((office) => (
+                  {contactInfo.offices.map((office) => (
                     <li
                       key={office.city}
                       className="text-sm text-white/60"
