@@ -58,7 +58,7 @@ hashtag-tech/
 - **ISR Caching**: Incremental Static Regeneration for performance
 - **Accessibility**: WCAG 2.1 AA compliant with reduced motion support
 - **Contact Form**: Zod-validated form with Brevo email integration
-- **Chat Widget**: Reusable, configurable chat component
+- **AI-Powered Chatbot**: Streaming chat interface powered by OpenAI GPT-4o-mini and Vercel AI SDK
 - **Blog**: Dynamic blog listing and detail pages
 - **Careers**: Job listings with ISR caching
 
@@ -80,6 +80,9 @@ Create a `.env.local` file:
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# AI Chatbot
+OPENAI_API_KEY=your_openai_api_key_here
 
 # Brevo Email (optional - for contact form)
 BREVO_API_KEY=your_brevo_api_key_here
