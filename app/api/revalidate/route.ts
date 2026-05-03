@@ -73,6 +73,15 @@ function getRevalidationConfig(docType: string) {
     successStory: {
       tags: ["successStories"],
     },
+    ceoSection: {
+      tags: ["ceoSection"],
+    },
+    globalPartner: {
+      tags: ["globalPartners"],
+    },
+    "sanity.imageAsset": {
+      tags: ["images"],
+    },
   };
 
   return configs[docType];
@@ -176,7 +185,7 @@ export async function GET() {
   return NextResponse.json({
     webhook: "/api/revalidate",
     status: WEBHOOK_SECRET ? "configured" : "missing-secret",
-    supportedTypes: ["post", "career", "teamMember", "service", "testimonial", "successStory"],
+    supportedTypes: ["post", "career", "teamMember", "service", "testimonial", "successStory", "ceoSection", "globalPartner", "sanity.imageAsset"],
     environment: process.env.NODE_ENV,
   });
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClient } from "@/sanity/lib/client";
+import { sanityFetch } from "@/sanity/lib/client";
 import { validateSanityConfig } from "@/sanity/env";
 
 /**
@@ -9,21 +9,14 @@ import { validateSanityConfig } from "@/sanity/env";
  * Returns the first active CEO section document.
  *
  * Caching:
- * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
+ * - Next.js Data Cache (managed by sanityFetch)
+ * - Tags: ['ceoSection'] for webhook on-demand revalidation
  */
 export async function GET() {
   const config = validateSanityConfig();
   if (!config.valid) {
     return NextResponse.json(
       { error: config.error || "Sanity configuration error" },
-      { status: 500 }
-    );
-  }
-
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Sanity client not configured" },
       { status: 500 }
     );
   }
@@ -57,21 +50,16 @@ export async function GET() {
       }
     `;
 
-    const ceoData = await client.fetch(query);
+    const ceoData = await sanityFetch({
+      query,
+      tags: ["ceoSection"],
+    });
 
     if (!ceoData) {
-      return NextResponse.json(null, {
-        headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
-        },
-      });
+      return NextResponse.json(null);
     }
 
-    return NextResponse.json(ceoData, {
-      headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
-      },
-    });
+    return NextResponse.json(ceoData);
   } catch (error) {
     console.error("Error fetching CEO section:", error);
     return NextResponse.json(

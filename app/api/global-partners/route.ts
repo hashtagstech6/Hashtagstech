@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClient } from "@/sanity/lib/client";
+import { sanityFetch } from "@/sanity/lib/client";
 import { validateSanityConfig } from "@/sanity/env";
 
 /**
@@ -11,21 +11,14 @@ import { validateSanityConfig } from "@/sanity/env";
  * - limit: number of partners to return (optional, default: 50)
  *
  * Caching:
- * - s-maxage: 3600 seconds (1 hour browser/CDN cache)
+ * - Next.js Data Cache (managed by sanityFetch)
+ * - Tags: ['globalPartners'] for webhook on-demand revalidation
  */
 export async function GET(request: Request) {
   const config = validateSanityConfig();
   if (!config.valid) {
     return NextResponse.json(
       { error: config.error || "Sanity configuration error" },
-      { status: 500 }
-    );
-  }
-
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Sanity client not configured" },
       { status: 500 }
     );
   }
@@ -49,13 +42,12 @@ export async function GET(request: Request) {
       }
     `;
 
-    const partners = await client.fetch(query);
-
-    return NextResponse.json(partners, {
-      headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
-      },
+    const partners = await sanityFetch({
+      query,
+      tags: ["globalPartners"],
     });
+
+    return NextResponse.json(partners);
   } catch (error) {
     console.error("Error fetching global partners:", error);
     return NextResponse.json(
