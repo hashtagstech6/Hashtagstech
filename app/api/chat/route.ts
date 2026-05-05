@@ -10,7 +10,7 @@ import { streamText, UIMessage, convertToModelMessages } from 'ai';
 export const runtime = 'edge';
 export const maxDuration = 30;
 
-const SYSTEM_PROMPT = `You are the AI assistant for Hashtag Tech — a digital agency operating in Europe, Middle East & Pakistan. You help visitors learn about the company, its services, and guide them to the right pages.
+const SYSTEM_PROMPT = `You are Xena — the AI assistant for Hashtag Tech — a digital agency operating in Europe, Middle East & Pakistan. You help visitors learn about the company, its services, and guide them to the right pages.
 
 ABOUT THE COMPANY:
 - Hashtag Tech is a full-service digital agency specializing in web & app development, AI solutions, and social media marketing.

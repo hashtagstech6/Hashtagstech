@@ -9,29 +9,71 @@ interface Service {
   order: number;
 }
 
+interface SiteSettings {
+  footerLogo?: {
+    asset?: { url?: string };
+    alt?: string;
+  };
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+  }>;
+  contactEmails?: Array<{
+    label: string;
+    email: string;
+  }>;
+}
+
+import { 
+  Linkedin, 
+  Facebook, 
+  Instagram, 
+  Github, 
+  Youtube,
+  Share2 
+} from "lucide-react";
+
+const XIcon = (props: any) => (
+  <svg {...props} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+const platformIcons: Record<string, any> = {
+  linkedin: Linkedin,
+  "LinkedIn": Linkedin,
+  twitter: XIcon,
+  "Twitter": XIcon,
+  "twitter / x": XIcon,
+  "twitter/x": XIcon,
+  "Twitter / X": XIcon,
+  "Twitter/X": XIcon,
+  "x": XIcon,
+  "X": XIcon,
+  facebook: Facebook,
+  "Facebook": Facebook,
+  instagram: Instagram,
+  "Instagram": Instagram,
+  github: Github,
+  "GitHub": Github,
+  youtube: Youtube,
+  "YouTube": Youtube,
+};
+
 /**
  * Footer Component
- *
- * Site footer with Get In Touch column, Quick Links column, social links, and copyright bar.
- * Displays office locations (UAE, USA, Oman), email addresses, and 24/7 support note.
- *
- * Features:
- * - Dynamic Service Links from Sanity
- * - Contact information column
- * - Quick links navigation
- * - Social media links
- * - Copyright bar
- * - Responsive layout (stacks on mobile)
  */
 export default async function Footer() {
   const currentYear = new Date().getFullYear();
+  const client = getClient();
 
   // Fetch Services Dynamically
   let services: Service[] = [];
+  let settings: SiteSettings = {};
+
   try {
-    const client = getClient();
     if (client) {
-      const query = `
+      const servicesQuery = `
         *[_type == "service" && isActive == true] | order(order asc) {
           _id,
           title,
@@ -39,11 +81,29 @@ export default async function Footer() {
           order
         }
       `;
-      services = await client.fetch(query, {}, { useCdn: false });
+      const settingsQuery = `*[_type == "siteSettings"] | order(_updatedAt desc)[0] {
+        footerLogo {
+          asset->{ url },
+          alt
+        },
+        socialLinks[] {
+          platform,
+          url
+        },
+        contactEmails[] {
+          label,
+          email
+        }
+      }`;
+
+      [services, settings] = await Promise.all([
+        client.fetch(servicesQuery, {}, { useCdn: false }),
+        client.fetch(settingsQuery, {}, { useCdn: false, next: { tags: ["siteSettings"] } }),
+      ]);
     }
   } catch (error) {
-    console.error("Error fetching services for footer:", error);
-    // Fallback to static if fetch fails
+    console.error("Error fetching data for footer:", error);
+    // Fallback to static services if fetch fails
     services = [
       { _id: "1", title: "Web Development", slug: "web-development", order: 1 },
       { _id: "2", title: "App Development", slug: "app-development", order: 2 },
@@ -53,12 +113,19 @@ export default async function Footer() {
     ];
   }
 
+  // Ensure settings is not null
+  const safeSettings = settings || {};
+
+  // Use dynamic emails from Sanity if available, otherwise use defaults
+  const contactEmails = safeSettings.contactEmails?.length 
+    ? safeSettings.contactEmails 
+    : [
+        { label: "General Inquiries", email: "hello@hashtagstech.com" },
+        { label: "Careers", email: "careers@hashtagstech.com" },
+      ];
+
   const contactInfo = {
-    emails: [
-      { label: "General Inquiries", email: "hello@hashtagstech.com" },
-      { label: "Careers", email: "careers@hashtagstech.com" },
-      { label: "Support", email: "support@hashtagstech.com" },
-    ],
+    emails: contactEmails,
     offices: [
       { city: "Europe", country: "" },
       { city: "Middle East", country: "" },
@@ -76,35 +143,25 @@ export default async function Footer() {
     { name: "Contact", href: "/contact" },
   ];
 
-  const socialLinks = [
-    {
-      name: "LinkedIn",
-      href: "https://linkedin.com/company/hashtag-tech",
-      icon: (
-        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-        </svg>
-      ),
-    },
-    {
-      name: "Twitter",
-      href: "https://twitter.com/hashtagtech",
-      icon: (
-        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      ),
-    },
-    {
-      name: "Instagram",
-      href: "https://instagram.com/hashtagtech",
-      icon: (
-        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-        </svg>
-      ),
-    },
+  // Default social links if none in Sanity
+  const defaultSocialLinks = [
+    { name: "LinkedIn", href: "https://linkedin.com/company/hashtag-tech", platform: "linkedin" },
+    { name: "Twitter", href: "https://twitter.com/hashtagtech", platform: "twitter" },
+    { name: "Instagram", href: "https://instagram.com/hashtagtech", platform: "instagram" },
   ];
+
+  // Use dynamic social links from Sanity if available, otherwise use defaults
+  const activeSocialLinks = safeSettings.socialLinks?.length 
+    ? safeSettings.socialLinks
+        .filter(s => s.url && s.url.trim() !== "" && s.platform)
+        .map(s => ({ 
+          platform: s.platform, 
+          url: s.url 
+        }))
+    : defaultSocialLinks.map(s => ({ 
+        platform: s.platform, 
+        url: s.href 
+      }));
 
   return (
     <footer className="border-t border-white/10 bg-black text-white relative overflow-hidden">
@@ -120,8 +177,8 @@ export default async function Footer() {
           <div className="space-y-6">
             <Link href="/" className="block">
               <Image
-                src="/logo-horizontal.webp"
-                alt="Hashtag Tech"
+                src={safeSettings.footerLogo?.asset?.url || "/logo-horizontal.webp"}
+                alt={safeSettings.footerLogo?.alt || "Hashtag Tech"}
                 width={280}
                 height={88}
                 className="h-20 w-auto opacity-90"
@@ -130,20 +187,41 @@ export default async function Footer() {
             <p className="text-sm text-white/60 leading-relaxed max-w-xs">
               We build world-class web and mobile applications powered by cutting-edge AI technology. Partner with us to transform your digital presence.
             </p>
-            {/* Social Links Moved Here */}
+            {/* Social Links */}
             <div className="flex space-x-4 pt-2">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-primary hover:bg-white/5 transition-all duration-300 rounded-full p-2 border border-white/10 hover:border-primary/50"
-                  aria-label={`Follow us on ${social.name}`}
-                >
-                  {social.icon}
-                </a>
-              ))}
+              {activeSocialLinks.map((social, idx) => {
+                const platformKey = (social.platform || "").trim().toLowerCase();
+                const rawKey = (social.platform || "").trim();
+                let Icon = platformIcons[platformKey] || platformIcons[rawKey];
+                
+                // Extra robust platform detection from key or URL
+                if (!Icon) {
+                  const combined = (platformKey + " " + (social.url || "").toLowerCase());
+                  if (combined.includes("instagram")) Icon = Instagram;
+                  else if (combined.includes("linkedin")) Icon = Linkedin;
+                  else if (combined.includes("facebook")) Icon = Facebook;
+                  else if (combined.includes("twitter") || combined.includes("x.com")) Icon = XIcon;
+                  else if (combined.includes("github")) Icon = Github;
+                  else if (combined.includes("youtube")) Icon = Youtube;
+                }
+                
+                return (
+                  <a
+                    key={idx}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/60 hover:text-primary hover:bg-white/5 transition-all duration-300 rounded-full p-2 border border-white/10 hover:border-primary/50"
+                    aria-label={`Follow us on ${social.platform || "Social Media"}`}
+                  >
+                    {Icon ? (
+                      <Icon className="h-6 w-6" />
+                    ) : (
+                      <Share2 className="h-6 w-6" />
+                    )}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -204,7 +282,7 @@ export default async function Footer() {
               <div className="space-y-3">
                 <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Email</p>
                 <div className="space-y-2">
-                  {contactInfo.emails.slice(0, 2).map((email) => (
+                  {contactInfo.emails.map((email) => (
                     <a
                       key={email.label}
                       href={`mailto:${email.email}`}

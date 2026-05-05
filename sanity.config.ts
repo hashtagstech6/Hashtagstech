@@ -22,6 +22,7 @@ import { globalPartnerType } from "./sanity/schemaTypes/globalPartnerType";
 import { clientType } from "./sanity/schemaTypes/clientType";
 import { clientLogoType } from "./sanity/schemaTypes/clientLogoType";
 import { ceoSectionType } from "./sanity/schemaTypes/ceoSectionType";
+import { siteSettingsType } from "./sanity/schemaTypes/siteSettingsType";
 
 // Define schema types array
 const schemaTypes = [
@@ -37,6 +38,7 @@ const schemaTypes = [
   clientType,
   clientLogoType,
   ceoSectionType,
+  siteSettingsType,
 ];
 
 export default defineConfig({
@@ -55,6 +57,19 @@ export default defineConfig({
         S.list()
           .title("Content")
           .items([
+            // Global Settings
+            S.listItem()
+              .title("Site Settings")
+              .icon(() => "⚙️")
+              .child(
+                S.document()
+                  .schemaType("siteSettings")
+                  .documentId("siteSettings")
+                  .title("Site Settings")
+              ),
+
+            S.divider(),
+
             // Blog section
             S.listItem()
               .title("Blog")

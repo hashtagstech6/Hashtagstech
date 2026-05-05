@@ -82,6 +82,9 @@ function getRevalidationConfig(docType: string) {
     "sanity.imageAsset": {
       tags: ["images"],
     },
+    siteSettings: {
+      tags: ["siteSettings"],
+    },
   };
 
   return configs[docType];

@@ -12,7 +12,7 @@ import type { UIMessage } from "ai";
 /**
  * AI-Powered Chat Widget
  *
- * Floating chatbot using Vercel AI SDK v6 + OpenAI GPT-4o-mini.
+ * Floating Xena — the AI assistant using Vercel AI SDK v6 + OpenAI GPT-4o-mini.
  * Features:
  * - Streaming responses via Edge Runtime
  * - Client-side greeting interception (saves API costs)
@@ -30,7 +30,7 @@ const INITIAL_MESSAGES: UIMessage[] = [
     parts: [
       {
         type: "text",
-        text: "Hi! 👋 I'm the Hashtag Tech assistant. Ask me about our services, team, or anything else!",
+        text: "Hi! 👋 I'm Xena — your AI assistant. Ask me about our services, team, or anything else!",
       },
     ],
   },

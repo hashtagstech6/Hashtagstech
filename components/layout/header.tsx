@@ -33,7 +33,29 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [logo, setLogo] = useState<{ url: string; alt: string } | null>(null);
   const pathname = usePathname();
+
+  // Fetch logo from site settings
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch("/api/site-settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.logo?.asset?.url) {
+            setLogo({
+              url: data.logo.asset.url,
+              alt: data.logo.alt || "Hashtag Tech Logo",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching site settings for header:", err);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   // Detect scroll position for shadow effect
   useEffect(() => {
@@ -99,8 +121,8 @@ export default function Header() {
               className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md filter-none drop-shadow-none"
             >
               <Image
-                src="/logo-horizontal.webp"
-                alt="Hashtag Tech Logo"
+                src={logo?.url || "/logo-horizontal.webp"}
+                alt={logo?.alt || "Hashtag Tech Logo"}
                 width={210}
                 height={56}
                 className="h-14 w-auto"
