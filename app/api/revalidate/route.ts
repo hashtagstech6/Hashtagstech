@@ -72,6 +72,7 @@ function getRevalidationConfig(docType: string) {
     },
     successStory: {
       tags: ["successStories"],
+      pathPrefix: "/work",
     },
     ceoSection: {
       tags: ["ceoSection"],

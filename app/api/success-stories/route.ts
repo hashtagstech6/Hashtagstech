@@ -44,6 +44,7 @@ export async function GET(request: Request) {
       *[_type == "successStory" && (isActive == true || defined(isActive) == false)] | order(order asc)[0...${limit}] {
         _id,
         clientCompany,
+        slug,
         country,
         featuredImage {
           asset-> {

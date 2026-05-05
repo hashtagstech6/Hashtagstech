@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import MagneticButton from "@/components/ui/magnetic-button";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 /**
  * Success Stories Section Component
@@ -17,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface SuccessStory {
   _id: string;
   clientCompany: string;
+  slug?: { current: string };
   country?: string;
   featuredImage?: {
     asset?: { url?: string };
@@ -26,6 +29,7 @@ interface SuccessStory {
 }
 
 export default function SuccessStories() {
+  const router = useRouter();
   const sectionRef = useRef<HTMLElement>(null);
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
   const [expandedClient, setExpandedClient] = useState<string | null>(null);
@@ -53,8 +57,12 @@ export default function SuccessStories() {
   }, []);
 
 
-  const toggleMobile = (id: string) => {
-    setExpandedClient(expandedClient === id ? null : id);
+  const toggleMobile = (id: string, slug?: string) => {
+    if (window.innerWidth < 1024) {
+      setExpandedClient(expandedClient === id ? null : id);
+    } else if (slug) {
+      router.push(`/work/${slug}`);
+    }
   };
 
   if (loading) {
@@ -91,6 +99,7 @@ export default function SuccessStories() {
   const clients = stories.map(story => ({
     id: story._id,
     name: story.clientCompany,
+    slug: story.slug?.current || "",
     country: story.country || "",
     description: story.excerpt || "",
     imageUrl: story.featuredImage?.asset?.url || "/placeholder.svg",
@@ -123,7 +132,7 @@ export default function SuccessStories() {
               <div
                 onMouseEnter={() => setHoveredClient(client.id)}
                 onMouseLeave={() => setHoveredClient(null)}
-                onClick={() => toggleMobile(client.id)}
+                onClick={() => toggleMobile(client.id, client.slug)}
                 className="flex items-center cursor-pointer border-b border-border/30 py-6 group"
               >
                 {/* Heading */}
@@ -136,13 +145,30 @@ export default function SuccessStories() {
                   )}
                 </h3>
 
-                {/* Mobile expand icon */}
-                <ChevronDown
-                  className={cn(
-                    "w-5 h-5 text-muted-foreground lg:hidden transition-transform",
-                    expandedClient === client.id && "rotate-180"
+                {/* Mobile expand icon & View button */}
+                <div className="flex items-center gap-3">
+                  {client.slug && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/work/${client.slug}`);
+                      }}
+                      className="lg:hidden flex items-center gap-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-primary/20"
+                    >
+                      View
+                    </button>
                   )}
-                />
+                  <ChevronDown
+                    className={cn(
+                      "w-5 h-5 text-muted-foreground lg:hidden transition-transform",
+                      expandedClient === client.id && "rotate-180"
+                    )}
+                  />
+                  <div className="hidden lg:flex items-center gap-2 text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                    <span className="text-sm font-bold uppercase tracking-wider">View</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </div>
 
                 {/* Desktop floating image - appears on hover */}
                 <div
@@ -169,16 +195,29 @@ export default function SuccessStories() {
               <div
                 className={cn(
                   "lg:hidden overflow-hidden transition-all duration-300",
-                  expandedClient === client.id ? "max-h-62 py-3" : "max-h-0"
+                  expandedClient === client.id ? "max-h-96 py-4" : "max-h-0"
                 )}
               >
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
-                  <Image
-                    src={client.imageUrl || (index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg"))}
-                    alt={client.alt}
-                    fill
-                    className="object-cover"
-                  />
+                <div className="space-y-4">
+                  <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
+                    <Image
+                      src={client.imageUrl || (index === 0 ? "/images/success-case-2.jpg" : (index % 2 === 0 ? "/images/success-case.png" : "/placeholder.svg"))}
+                      alt={client.alt}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {client.description}
+                  </p>
+                  {client.slug && (
+                    <Link 
+                      href={`/work/${client.slug}`}
+                      className="inline-flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider hover:gap-3 transition-all"
+                    >
+                      View <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -186,7 +225,7 @@ export default function SuccessStories() {
 
           {/* MORE WORKS Button - Centered */}
           <div className="mt-12 flex justify-center">
-            <MagneticButton href="#portfolio" variant="outline">
+            <MagneticButton href="/work" variant="outline">
               More Works
               <ArrowRight className="w-4 h-4" />
             </MagneticButton>

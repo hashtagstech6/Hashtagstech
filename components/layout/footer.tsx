@@ -135,6 +135,7 @@ export default async function Footer() {
 
   const quickLinks = [
     { name: "Home", href: "/" },
+    { name: "Work", href: "/work" },
     { name: "Services", href: "/#services" },
     { name: "About Us", href: "/about" },
     { name: "Our Team", href: "/team" },

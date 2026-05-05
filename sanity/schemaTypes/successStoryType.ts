@@ -21,6 +21,17 @@ export const successStoryType = defineType({
       validation: (Rule) => Rule.required().error("Client company name is required"),
     }),
 
+    // Slug for detailed page
+    defineField({
+      name: "slug",
+      type: "slug",
+      options: {
+        source: "clientCompany",
+        maxLength: 96,
+      },
+      validation: (Rule) => Rule.required().error("Slug is required for the detailed page"),
+    }),
+
     // Country (for display after company name)
     defineField({
       name: "country",
@@ -49,6 +60,27 @@ export const successStoryType = defineType({
       type: "text",
       rows: 3,
       validation: (Rule) => Rule.required().min(10).error("Excerpt must be at least 10 characters"),
+    }),
+
+    // Detailed Content
+    defineField({
+      name: "content",
+      title: "Detailed Content",
+      type: "array",
+      of: [
+        { type: "block" },
+        {
+          type: "image",
+          options: { hotspot: true },
+          fields: [
+            {
+              name: "alt",
+              type: "string",
+              title: "Alternative Text",
+            },
+          ],
+        },
+      ],
     }),
 
     // Active flag
