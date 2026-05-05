@@ -11,7 +11,7 @@ export const siteSettingsType = defineType({
       name: "logo",
       title: "Main Logo",
       type: "image",
-      description: "The primary logo used in the header.",
+      description: "The primary logo used in the header. Recommended dimensions: 240x80px (3:1 aspect ratio).",
       options: { hotspot: true },
       fields: [
         {
@@ -26,7 +26,7 @@ export const siteSettingsType = defineType({
       name: "footerLogo",
       title: "Footer Logo",
       type: "image",
-      description: "Logo used in the footer (usually a white/light version).",
+      description: "Logo used in the footer (usually a white/light version). Recommended dimensions: 240x80px (3:1 aspect ratio).",
       options: { hotspot: true },
       fields: [
         {
